@@ -16,13 +16,17 @@ import {
   CheckCircle2,
   Lock,
   Globe,
-  FileCheck2,
+  Compass,
+  ArrowRight,
+  Map as MapIcon,
+  List as ListIcon,
 } from 'lucide-react';
 
 export default function MemoirPage() {
   const { profile } = useAuth();
   const [copied, setCopied] = useState(false);
   const [privacyPublic, setPrivacyPublic] = useState(true);
+  const [viewMode, setViewMode] = useState<'timeline' | 'map'>('timeline');
 
   // Completed verified submissions only
   const approvedSubmissions = SAMPLE_SUBMISSIONS.filter(
@@ -49,8 +53,8 @@ export default function MemoirPage() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full space-y-10">
-      {/* Editorial Journal Header */}
-      <div className="bg-[#FFFDF8] border-2 border-[#D6CCBC] rounded-3xl p-8 sm:p-12 shadow-sm space-y-6 relative overflow-hidden">
+      {/* 1. Editorial Journal Header */}
+      <div className="bg-[#FFFDF8] border-2 border-[#D6CCBC] rounded-3xl p-6 sm:p-12 shadow-sm space-y-6 relative overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#D6CCBC] pb-4">
           <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-[#777A53] bg-[#EAE1D3] px-3 py-1 rounded-md border border-[#D6CCBC]">
             <BookOpen className="w-3.5 h-3.5 text-[#B85F43]" />
@@ -92,9 +96,8 @@ export default function MemoirPage() {
             {profile.display_name}&apos;s Adventure Memoir
           </h1>
           <p className="text-xs sm:text-sm text-[#6D685C] leading-relaxed">
-            An authorized chronicle of verified mountain passes, river runs, and archaeological
-            investigations. Private verification proof remains securely shielded; only certified
-            accomplishments appear in this public journal.
+            An authentic chronicle of verified mountain passes, river runs, and archaeological
+            investigations. Only officially certified accomplishments appear in this personal field guide.
           </p>
         </div>
 
@@ -133,101 +136,160 @@ export default function MemoirPage() {
         </div>
       </div>
 
-      {/* Interactive Accomplishments Cartography */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between border-b border-[#D6CCBC] pb-2">
-          <h2 className="text-lg font-bold text-[#292820] flex items-center gap-2 font-sans">
-            <MapPin className="w-4 h-4 text-[#777A53]" />
-            <span>Map of Verified Accomplishments</span>
-          </h2>
-          <span className="text-xs font-mono text-[#8E8675]">Authoritative Completed Waypoints</span>
+      {/* 2. Journal Content with View Toggle (Timeline vs Map) */}
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D6CCBC] pb-3">
+          <div>
+            <h2 className="text-xl font-bold text-[#292820] font-sans">
+              Personal Adventure Journal
+            </h2>
+            <p className="text-xs text-[#6D685C]">
+              Chronological field polaroids authenticated by expedition review dispatchers.
+            </p>
+          </div>
+
+          {/* Compact View Toggle */}
+          <div className="flex items-center bg-[#EAE1D3] p-0.5 rounded-lg border border-[#D6CCBC] self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => setViewMode('timeline')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                viewMode === 'timeline'
+                  ? 'bg-[#FFFDF8] text-[#292820] shadow-xs'
+                  : 'text-[#6D685C] hover:text-[#292820]'
+              }`}
+            >
+              <ListIcon className="w-3.5 h-3.5" />
+              <span>Polaroids</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('map')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold transition-colors ${
+                viewMode === 'map'
+                  ? 'bg-[#FFFDF8] text-[#292820] shadow-xs'
+                  : 'text-[#6D685C] hover:text-[#292820]'
+              }`}
+            >
+              <MapIcon className="w-3.5 h-3.5" />
+              <span>Map View</span>
+            </button>
+          </div>
         </div>
 
-        <MapComponent
-          activities={completedActivities.map((c) => c.activity).filter(Boolean) as any}
-          height="440px"
-          center={[30.0, 78.5]}
-          zoom={5}
-          showFilters={false}
-          enableRouting={true}
-        />
-      </div>
+        {/* 3. Empty State (When no journal entries exist) */}
+        {completedActivities.length === 0 ? (
+          <div className="max-w-md mx-auto my-12 p-8 bg-[#FFFDF8] border-2 border-dashed border-[#D6CCBC] rounded-2xl text-center space-y-5 shadow-xs">
+            {/* Blank Polaroid-Style Illustration */}
+            <div className="w-48 aspect-4/3 mx-auto bg-[#F5F0E7] border-2 border-[#D6CCBC] rounded-lg p-2 pb-6 flex flex-col items-center justify-center space-y-2 shadow-xs">
+              <Compass className="w-10 h-10 text-[#777A53] opacity-60" />
+              <span className="font-handwritten text-lg text-[#6D685C] -rotate-2 select-none">
+                field notes awaiting ~
+              </span>
+            </div>
 
-      {/* Chronological Timeline & Scrapbook */}
-      <div className="space-y-6 pt-4">
-        <div className="border-b border-[#D6CCBC] pb-2">
-          <h2 className="text-xl font-bold text-[#292820] font-sans">
-            Expedition Chronicle Timeline
-          </h2>
-          <p className="text-xs text-[#6D685C]">
-            Chronological records authenticated by platform review dispatchers.
-          </p>
-        </div>
+            <div className="space-y-2">
+              <h3 className="text-base font-bold text-[#292820] font-sans">
+                Your first adventure goes here.
+              </h3>
+              <p className="text-xs text-[#6D685C] leading-relaxed">
+                Complete a certified trailhead, submit your summit photograph, and build your lifelong expedition memoir.
+              </p>
+            </div>
 
-        <div className="relative border-l-2 border-[#D6CCBC] ml-4 pl-6 space-y-8">
-          {completedActivities.map((item) => (
-            <div key={item.id} className="relative group">
-              {/* Timeline marker pin */}
-              <div className="absolute -left-[31px] top-1.5 w-3.5 h-3.5 rounded-full bg-[#B85F43] border-2 border-[#FFFDF8]" />
+            <Link
+              href="/explorer"
+              className="btn-journal-terracotta text-xs py-2 px-5 inline-flex items-center gap-2"
+            >
+              <Compass className="w-3.5 h-3.5" />
+              <span>Explore Adventures</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+        ) : viewMode === 'map' ? (
+          /* Map View */
+          <div className="rounded-2xl overflow-hidden border-2 border-[#D6CCBC] shadow-xs">
+            <MapComponent
+              activities={completedActivities.map((c) => c.activity).filter(Boolean) as any}
+              height="520px"
+              center={[30.0, 78.5]}
+              zoom={5}
+              enableRouting={true}
+            />
+          </div>
+        ) : (
+          /* Restrained Polaroid-Inspired Journal Grid */
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {completedActivities.map((item, idx) => {
+              // Custom handwritten moment for each polaroid entry
+              const handwrittenCaptions = [
+                'field notes: early dawn river ascent ~',
+                'summit achieved under clear skies ~',
+                'boulder pitch clean, zero trace left ~',
+              ];
+              const note = handwrittenCaptions[idx % handwrittenCaptions.length];
 
-              <div className="rounded-2xl bg-[#FFFDF8] border border-[#D6CCBC] overflow-hidden shadow-xs p-6 space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#D6CCBC] pb-3">
-                  <div>
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#777A53] bg-[#EAE1D3] px-2 py-0.5 rounded mr-2 border border-[#D6CCBC]">
-                      {item.activity_category}
-                    </span>
-                    <span className="text-xs text-[#6D685C] font-mono">
-                      Completed:{' '}
-                      {new Date(item.reviewed_at || item.submitted_at).toLocaleDateString()}
-                    </span>
-                    <h3 className="text-lg font-bold text-[#292820] mt-1 font-sans">
-                      {item.activity_name}
-                    </h3>
-                  </div>
-
-                  <div className="text-xs font-mono font-extrabold text-[#B85F43] bg-[#F5F0E7] px-2.5 py-1 rounded border border-[#D6CCBC]">
-                    +{item.points} PTS AWARDED
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-                  {item.activity && (
-                    <div className="md:col-span-4 rounded-xl overflow-hidden border border-[#D6CCBC]">
+              return (
+                <div
+                  key={item.id}
+                  className="bg-[#FFFDF8] border-2 border-[#D6CCBC] rounded-xl p-3 pb-5 shadow-xs hover:border-[#777A53] transition-all flex flex-col justify-between space-y-3 relative group"
+                >
+                  {/* Photo Frame */}
+                  <div className="relative aspect-4/3 w-full rounded-lg overflow-hidden bg-[#EAE1D3] border border-[#D6CCBC]">
+                    {item.activity && (
                       <SafeImage
                         src={item.activity.image_url}
                         alt={item.activity.name}
                         aspectRatio="4/3"
-                        fallbackTitle={item.activity_name}
+                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
                       />
-                    </div>
-                  )}
+                    )}
 
-                  <div className="md:col-span-8 space-y-3">
-                    <p className="text-xs sm:text-sm text-[#6D685C] leading-relaxed">
-                      &quot;{item.notes || 'Official trail completed with verified summit coordinates.'}&quot;
-                    </p>
-
-                    <div className="p-3 bg-[#EAE1D3]/50 rounded-lg border border-[#D6CCBC] text-xs space-y-1">
-                      <div className="font-mono text-[10px] text-[#777A53] font-bold uppercase flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#777A53]" />
-                        <span>Reviewer Verification Dispatch</span>
-                      </div>
-                      <div className="text-[#292820] text-xs">
-                        Reviewer Decision: {item.review_notes || 'Photographic evidence matches summit benchmark.'}
-                      </div>
+                    {/* Circular Verified Achievement Stamp */}
+                    <div className="absolute top-2.5 right-2.5 z-10 w-9 h-9 rounded-full bg-[#FFFDF8]/95 border-2 border-[#777A53] flex flex-col items-center justify-center text-[#777A53] shadow-xs select-none">
+                      <span className="text-[7px] font-mono font-extrabold uppercase leading-tight">
+                        CERTIFIED
+                      </span>
+                      <span className="text-[6px] font-mono leading-none">VERIFIED</span>
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs text-[#8E8675] font-mono">
-                      <span>STATUS: CERTIFIED VERIFIED</span>
-                      <span>•</span>
-                      <span>REF: SUB-{item.id.toUpperCase()}</span>
+                    {/* Category Stamp */}
+                    <div className="absolute top-2.5 left-2.5 z-10 bg-[#FFFDF8]/90 border border-[#D6CCBC] px-2 py-0.5 rounded text-[9px] font-mono font-bold text-[#777A53] uppercase">
+                      {item.activity_category}
                     </div>
                   </div>
+
+                  {/* Polaroid Content */}
+                  <div className="space-y-1.5 px-1">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-[#6D685C]">
+                      <span>
+                        {new Date(item.reviewed_at || item.submitted_at).toLocaleDateString()}
+                      </span>
+                      <span className="font-bold text-[#B85F43]">+{item.points} PTS</span>
+                    </div>
+
+                    <h3 className="font-bold text-base text-[#292820] font-sans truncate">
+                      {item.activity_name}
+                    </h3>
+
+                    {/* Handwritten Personal Annotation */}
+                    <div className="pt-0.5">
+                      <span className="font-handwritten text-base text-[#B85F43] -rotate-1 select-none block">
+                        &quot;{note}&quot;
+                      </span>
+                    </div>
+
+                    {item.review_notes && (
+                      <p className="text-[11px] text-[#6D685C] italic pt-1 border-t border-[#D6CCBC] line-clamp-2">
+                        Arbitrator note: {item.review_notes}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );

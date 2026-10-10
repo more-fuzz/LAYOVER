@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   HelpCircle,
   FileText,
+  ArrowLeft,
 } from 'lucide-react';
 
 export default function BraveEnoughPage() {
@@ -33,7 +34,21 @@ export default function BraveEnoughPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full space-y-10">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 w-full space-y-8">
+      {/* 1. Clear Exit Route back to Normal Explore */}
+      <div className="flex items-center justify-between border-b border-[#D6CCBC] pb-3">
+        <Link
+          href="/explorer"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-[#6D685C] hover:text-[#292820] bg-[#EAE1D3] hover:bg-[#D6CCBC]/50 border border-[#D6CCBC] px-3 py-1.5 rounded-lg transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 text-[#B85F43]" />
+          <span>Return to Normal Explore</span>
+        </Link>
+        <span className="font-handwritten text-base sm:text-lg text-[#777A53] select-none">
+          secret field archives unlocked ~
+        </span>
+      </div>
+
       {/* Editorial Header Banner */}
       <div className="bg-[#FFFDF8] border-2 border-[#D6CCBC] rounded-3xl p-8 sm:p-12 shadow-sm space-y-6 relative overflow-hidden">
         <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#D6CCBC] pb-4">

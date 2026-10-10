@@ -39,7 +39,46 @@ export async function updateSession(request: NextRequest) {
   );
 
   // Refresh auth session
-  await supabase.auth.getUser();
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData?.user;
+
+  const pathname = request.nextUrl.pathname;
+  const isAdminRoute = pathname.startsWith('/admin') || pathname.startsWith('/api/admin');
+
+  if (isAdminRoute) {
+    if (!user) {
+      // Check if demo role is admin (for local evaluator testing)
+      const demoRole = request.cookies.get('tt_demo_role')?.value;
+      if (demoRole !== 'admin') {
+        if (pathname.startsWith('/api/')) {
+          return NextResponse.json(
+            { status: 'error', message: 'Unauthorized: Session missing.' },
+            { status: 401 }
+          );
+        }
+        const loginUrl = new URL('/auth/login', request.url);
+        loginUrl.searchParams.set('redirectTo', pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+    } else {
+      // Authoritative role check from profiles table
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .single();
+
+      if (profile?.role !== 'admin') {
+        if (pathname.startsWith('/api/')) {
+          return NextResponse.json(
+            { status: 'error', message: 'Forbidden: Administrator privileges required.' },
+            { status: 403 }
+          );
+        }
+        return NextResponse.redirect(new URL('/?error=forbidden', request.url));
+      }
+    }
+  }
 
   return supabaseResponse;
 }

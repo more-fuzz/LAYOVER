@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { reviewSubmission } from '@/services/submissions';
 import { submissionReviewSchema } from '@/validation/schemas';
 import { createClient } from '@/lib/supabase/server';
+import { verifyAdminUser } from '@/lib/auth-server';
 
 export async function POST(
   request: NextRequest,
@@ -20,9 +21,15 @@ export async function POST(
       );
     }
 
-    const supabase = await createClient();
-    const { data: authUser } = await supabase.auth.getUser();
-    const reviewerId = authUser.user?.id || 'admin-01';
+    const auth = await verifyAdminUser();
+    if (!auth.authorized) {
+      return NextResponse.json(
+        { status: 'error', message: auth.error || 'Access denied.' },
+        { status: auth.status }
+      );
+    }
+
+    const reviewerId = auth.userId || 'admin-01';
 
     const result = await reviewSubmission(
       submissionId,

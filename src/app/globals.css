@@ -36,6 +36,14 @@
   }
 }
 
+.font-handwritten {
+  font-family: var(--font-handwritten), "Caveat", cursive;
+}
+
+.font-mono {
+  font-family: var(--font-mono), "IBM Plex Mono", ui-monospace, monospace;
+}
+
 /* Custom retro-journal utility tokens */
 .bg-journal-main { background-color: var(--background); }
 .bg-journal-secondary { background-color: var(--surface-secondary); }

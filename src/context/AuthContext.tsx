@@ -176,6 +176,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
     setProfile(DEFAULT_DEMO_TRAVELER);
     setIsDemoUser(true);
+    if (typeof document !== 'undefined') {
+      document.cookie = 'tt_demo_role=; path=/; max-age=0; SameSite=Lax';
+    }
   };
 
   const switchDemoRole = (newRole: 'traveler' | 'admin') => {
@@ -185,6 +188,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setProfile(DEFAULT_DEMO_TRAVELER);
     }
     setIsDemoUser(true);
+    if (typeof document !== 'undefined') {
+      document.cookie = `tt_demo_role=${newRole}; path=/; max-age=86400; SameSite=Lax`;
+    }
   };
 
   const refreshProfile = async () => {
