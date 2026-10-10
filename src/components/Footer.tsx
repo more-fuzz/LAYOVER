@@ -2,51 +2,53 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { Compass, ShieldCheck, Heart, ExternalLink } from 'lucide-react';
+import { Compass, ShieldCheck, ExternalLink, MapPin } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer className="bg-[#09100d] border-t border-[#17261d] text-zinc-400 text-sm">
+    <footer className="bg-[#FFFDF8] border-t-2 border-[#D6CCBC] text-[#6D685C] text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Col */}
           <div className="md:col-span-1 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-emerald-600 flex items-center justify-center text-white">
+              <div className="w-8 h-8 rounded-md bg-[#EAE1D3] border border-[#D6CCBC] flex items-center justify-center text-[#777A53]">
                 <Compass className="w-4 h-4" />
               </div>
-              <span className="font-bold text-white text-base">Trails & Tales</span>
+              <span className="font-bold text-[#292820] text-base font-sans">Trails & Tales</span>
             </div>
-            <p className="text-xs text-zinc-400 leading-relaxed">
-              Gamified adventure travel and personal explorer memoirs. Discover extreme outdoor sports, explore ancient folklore enigmas, verify proof of completion, and earn real rewards.
+            <p className="text-xs text-[#6D685C] leading-relaxed">
+              Gamified adventure travel and personal explorer memoirs. Discover outdoor trails, explore cultural folklore enigmas, verify proof of completion, and earn outfitter rewards.
             </p>
-            <div className="pt-2 text-xs text-emerald-400 font-semibold flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4" />
+            <div className="pt-1 text-xs text-[#777A53] font-semibold flex items-center gap-1.5 font-mono">
+              <ShieldCheck className="w-4 h-4 text-[#777A53]" />
               <span>Leave-No-Trace & Safety First</span>
             </div>
           </div>
 
           {/* Navigation */}
           <div>
-            <h4 className="text-zinc-200 font-semibold text-xs uppercase tracking-wider mb-3">Expeditions</h4>
+            <h4 className="text-[#292820] font-bold text-xs uppercase tracking-wider mb-3 font-mono">
+              Field Expeditions
+            </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link href="/explorer" className="hover:text-emerald-400 transition-colors">
-                  Interactive Adventure Explorer
+                <Link href="/explorer" className="hover:text-[#292820] hover:underline transition-colors">
+                  Adventure Map & Route Planning
                 </Link>
               </li>
               <li>
-                <Link href="/brave-enough" className="hover:text-amber-300 transition-colors">
-                  &quot;Am I Brave Enough?&quot; Spooky Trails
+                <Link href="/arena" className="hover:text-[#292820] hover:underline transition-colors">
+                  Adventure Arena & Points
                 </Link>
               </li>
               <li>
-                <Link href="/leaderboard" className="hover:text-emerald-400 transition-colors">
-                  Global Leaderboard
+                <Link href="/brave-enough" className="hover:text-[#B85F43] hover:underline transition-colors">
+                  Am I Brave Enough? (Enigmas)
                 </Link>
               </li>
               <li>
-                <Link href="/rewards" className="hover:text-emerald-400 transition-colors">
+                <Link href="/rewards" className="hover:text-[#292820] hover:underline transition-colors">
                   Rewards Catalogue
                 </Link>
               </li>
@@ -55,50 +57,54 @@ export default function Footer() {
 
           {/* Gamification & Memoir */}
           <div>
-            <h4 className="text-zinc-200 font-semibold text-xs uppercase tracking-wider mb-3">Gamified Memoir</h4>
+            <h4 className="text-[#292820] font-bold text-xs uppercase tracking-wider mb-3 font-mono">
+              Memoir & Verification
+            </h4>
             <ul className="space-y-2 text-xs">
               <li>
-                <Link href="/memoir" className="hover:text-emerald-400 transition-colors">
+                <Link href="/memoir" className="hover:text-[#292820] hover:underline transition-colors">
                   Personal Travel Memoir
                 </Link>
               </li>
               <li>
-                <Link href="/submissions/new" className="hover:text-emerald-400 transition-colors">
+                <Link href="/submissions/new" className="hover:text-[#292820] hover:underline transition-colors">
                   Submit Evidence for Review
                 </Link>
               </li>
               <li>
-                <Link href="/dashboard" className="hover:text-emerald-400 transition-colors">
+                <Link href="/dashboard" className="hover:text-[#292820] hover:underline transition-colors">
                   Traveler Dashboard
                 </Link>
               </li>
               <li>
-                <Link href="/profile" className="hover:text-emerald-400 transition-colors">
+                <Link href="/profile" className="hover:text-[#292820] hover:underline transition-colors">
                   Profile & Preferences
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Technology & Safety Statement */}
+          {/* Heritage & Safety Statement */}
           <div>
-            <h4 className="text-zinc-200 font-semibold text-xs uppercase tracking-wider mb-3">Heritage & Protocol</h4>
-            <p className="text-xs text-zinc-400 leading-relaxed mb-3">
-              All listed destinations adhere to certified national park and cultural heritage guidelines. Do not trespass into restricted, private, or hazardous locations.
+            <h4 className="text-[#292820] font-bold text-xs uppercase tracking-wider mb-3 font-mono">
+              Heritage Protocol
+            </h4>
+            <p className="text-xs text-[#6D685C] leading-relaxed mb-3">
+              All listed destinations adhere to certified national park and cultural heritage guidelines. Never trespass into restricted or hazardous locations.
             </p>
-            <div className="text-[11px] text-zinc-500">
-              Built on Next.js 16, Supabase, Leaflet & Tailwind CSS.
+            <div className="text-[11px] text-[#8E8675] font-mono">
+              Cartography via OpenStreetMap & OSRM Engine.
             </div>
           </div>
         </div>
 
-        <div className="border-t border-[#14231a] mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-zinc-500 gap-4">
+        <div className="border-t border-[#D6CCBC] mt-8 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-[#8E8675] gap-4 font-mono">
           <div>
-            © 2026 Trails & Tales — Gamified Adventure Travel Platform.
+            © 2026 Trails & Tales — Gamified Field Travel Journal.
           </div>
           <div className="flex items-center gap-4 text-xs">
-            <span className="text-zinc-400">Prototype Release v1.0</span>
-            <span className="text-emerald-500 font-medium">Remote Supabase Connected</span>
+            <span className="retro-stamp text-[9px]">FIELD GUIDE v2.0</span>
+            <span className="text-[#777A53] font-bold">Authoritative Remote DB Active</span>
           </div>
         </div>
       </div>

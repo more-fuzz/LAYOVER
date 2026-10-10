@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
+import SafeImage from '@/components/SafeImage';
 import { User, ShieldCheck, Sparkles, CheckCircle2, Award, Settings, Bell, Lock } from 'lucide-react';
 
 export default function ProfilePage() {
-  const { profile, role } = useAuth();
+  const { profile, role, signOut } = useAuth();
 
   const [displayName, setDisplayName] = useState(profile.display_name);
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url);
@@ -32,67 +33,73 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-8">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full space-y-8">
       {/* Profile Overview Card */}
-      <div className="p-8 rounded-3xl bg-gradient-to-r from-[#14231b] via-[#101b15] to-[#0a120e] border border-[#1e3427] shadow-2xl flex flex-col sm:flex-row items-center gap-6">
-        <img
-          src={avatarUrl}
-          alt={displayName}
-          className="w-24 h-24 rounded-3xl object-cover ring-4 ring-emerald-500/40 shadow-xl"
-        />
+      <div className="p-6 sm:p-8 rounded-2xl bg-[#FFFDF8] border-2 border-[#D6CCBC] shadow-xs flex flex-col sm:flex-row items-center gap-6">
+        <div className="w-20 h-20 rounded-2xl overflow-hidden border border-[#D6CCBC] shrink-0">
+          <SafeImage
+            src={avatarUrl}
+            alt={displayName}
+            aspectRatio="1/1"
+            fallbackTitle={displayName}
+          />
+        </div>
+
         <div className="flex-1 text-center sm:text-left space-y-1">
-          <div className="flex items-center justify-center sm:justify-start gap-2">
-            <h1 className="text-2xl font-black text-white">{displayName}</h1>
-            <span className="text-xs bg-emerald-950 text-emerald-400 font-bold px-2 py-0.5 rounded-full border border-emerald-800">
-              {role.toUpperCase()}
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
+            <h1 className="text-2xl font-bold text-[#292820] font-sans">{displayName}</h1>
+            <span className="retro-stamp text-[10px]">
+              ROLE: {role.toUpperCase()}
             </span>
           </div>
-          <p className="text-xs text-zinc-400">@{profile.username}</p>
-          <div className="flex items-center justify-center sm:justify-start gap-4 pt-2 text-xs text-zinc-300">
-            <span className="font-bold text-amber-400">
-              ✨ {profile.points.toLocaleString()} Verified Points
+          <p className="text-xs text-[#6D685C] font-mono">@{profile.username}</p>
+          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-2 text-xs text-[#292820] font-mono">
+            <span className="font-bold text-[#B85F43] flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5 text-[#C6A45B]" />
+              <span>{profile.points.toLocaleString()} PTS Verified</span>
             </span>
-            <span>• Rank #6 Global</span>
+            <span className="text-[#6D685C]">• Rank #{profile.rank || 6} Global</span>
           </div>
         </div>
       </div>
 
       {/* Edit Profile Form */}
-      <div className="p-8 rounded-3xl bg-[#101b15] border border-[#1e3427] shadow-xl space-y-6">
-        <div className="border-b border-[#1b2f24] pb-4">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <Settings className="w-5 h-5 text-emerald-400" />
+      <div className="p-6 sm:p-8 rounded-2xl bg-[#FFFDF8] border border-[#D6CCBC] shadow-xs space-y-6">
+        <div className="border-b border-[#D6CCBC] pb-4">
+          <h2 className="text-lg font-bold text-[#292820] flex items-center gap-2 font-sans">
+            <Settings className="w-4 h-4 text-[#777A53]" />
             <span>Profile Settings & Identity</span>
           </h2>
-          <p className="text-xs text-zinc-400 mt-1">
-            In accordance with Row Level Security (RLS), travelers may edit their display name and avatar. Role escalation to admin is protected by database triggers.
+          <p className="text-xs text-[#6D685C] mt-1 leading-relaxed">
+            In accordance with Row Level Security (RLS), explorers can edit their display identity.
+            Role escalation to administrative privileges is strictly guarded by server database policies.
           </p>
         </div>
 
         {savedSuccess && (
-          <div className="p-4 rounded-xl bg-emerald-950 border border-emerald-700 text-emerald-300 text-xs flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-            <span>Profile changes saved successfully!</span>
+          <div className="p-3.5 rounded-xl bg-[#EAE1D3] border border-[#777A53] text-[#777A53] text-xs flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-[#777A53]" />
+            <span>Profile changes updated successfully!</span>
           </div>
         )}
 
-        <form onSubmit={handleSave} className="space-y-6">
+        <form onSubmit={handleSave} className="space-y-5">
           <div>
-            <label className="block text-xs font-bold text-zinc-300 mb-1.5">
-              Display Name
+            <label className="block text-xs font-mono font-bold text-[#6D685C] uppercase tracking-wider mb-1.5">
+              Explorer Display Name
             </label>
             <input
               type="text"
               required
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-[#0b1410] border border-[#1d3326] text-white text-sm focus:outline-none focus:border-emerald-500"
+              className="w-full px-3.5 py-2 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] text-sm focus:outline-hidden focus:border-[#777A53]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-zinc-300 mb-2">
-              Choose Avatar
+            <label className="block text-xs font-mono font-bold text-[#6D685C] uppercase tracking-wider mb-2">
+              Select Field Avatar
             </label>
             <div className="flex items-center gap-3">
               {sampleAvatars.map((url, idx) => (
@@ -100,45 +107,57 @@ export default function ProfilePage() {
                   key={idx}
                   type="button"
                   onClick={() => setAvatarUrl(url)}
-                  className={`relative rounded-2xl overflow-hidden ring-2 transition-all ${
-                    avatarUrl === url ? 'ring-emerald-500 scale-105' : 'ring-transparent opacity-70 hover:opacity-100'
+                  className={`relative rounded-xl overflow-hidden border-2 transition-all ${
+                    avatarUrl === url
+                      ? 'border-[#B85F43] scale-105'
+                      : 'border-[#D6CCBC] opacity-70 hover:opacity-100'
                   }`}
                 >
-                  <img src={url} alt={`Avatar ${idx}`} className="w-14 h-14 object-cover" />
+                  <img src={url} alt={`Avatar ${idx}`} className="w-12 h-12 object-cover" />
                 </button>
               ))}
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-zinc-300 mb-1.5">
-              Custom Avatar URL
+            <label className="block text-xs font-mono font-bold text-[#6D685C] uppercase tracking-wider mb-1.5">
+              Custom Avatar Visual URL
             </label>
             <input
               type="url"
               value={avatarUrl}
               onChange={(e) => setAvatarUrl(e.target.value)}
-              className="w-full px-4 py-2.5 rounded-xl bg-[#0b1410] border border-[#1d3326] text-white text-xs focus:outline-none focus:border-emerald-500 font-mono"
+              className="w-full px-3.5 py-2 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] text-xs focus:outline-hidden focus:border-[#777A53] font-mono"
             />
           </div>
 
-          <div className="p-4 rounded-2xl bg-[#0b1410] border border-[#1a2d21] flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 text-zinc-400">
-              <Lock className="w-4 h-4 text-emerald-500" />
+          <div className="p-3.5 rounded-xl bg-[#F5F0E7] border border-[#D6CCBC] flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2 text-[#6D685C]">
+              <Lock className="w-4 h-4 text-[#777A53]" />
               <span>Database Role Security (trg_protect_profile_role):</span>
             </div>
-            <span className="font-bold text-emerald-400 uppercase font-mono">
-              {role} (Immutable by client)
+            <span className="font-bold text-[#B85F43] uppercase font-mono">
+              {role} (IMMUTABLE BY CLIENT)
             </span>
           </div>
 
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-6 py-3 rounded-xl font-bold text-xs bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg transition-all"
-          >
-            {saving ? 'Saving...' : 'Save Profile Changes'}
-          </button>
+          <div className="pt-2 flex items-center justify-between">
+            <button
+              type="submit"
+              disabled={saving}
+              className="btn-journal-primary text-xs py-2.5 px-5 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : 'Save Profile Changes'}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => signOut()}
+              className="btn-journal-secondary text-xs py-2.5 px-4 text-[#B85F43]"
+            >
+              Sign Out
+            </button>
+          </div>
         </form>
       </div>
     </div>

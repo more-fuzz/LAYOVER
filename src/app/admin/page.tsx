@@ -1,7 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
+import SafeImage from '@/components/SafeImage';
 import { SAMPLE_SUBMISSIONS, SAMPLE_REWARDS, SubmissionItem, RewardItem } from '@/data/sampleData';
 import {
   ShieldCheck,
@@ -14,14 +16,15 @@ import {
   Gift,
   Sparkles,
   User,
-  ExternalLink,
+  ArrowRight,
+  Lock,
+  FileCheck2,
 } from 'lucide-react';
 
 export default function AdminDashboardPage() {
   const { profile, role, switchDemoRole } = useAuth();
 
   const [submissions, setSubmissions] = useState<SubmissionItem[]>(SAMPLE_SUBMISSIONS);
-  const [rewards, setRewards] = useState<RewardItem[]>(SAMPLE_REWARDS);
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
 
   const [reviewingSub, setReviewingSub] = useState<SubmissionItem | null>(null);
@@ -51,7 +54,11 @@ export default function AdminDashboardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           status,
-          review_notes: reviewNotes || (status === 'approved' ? 'Verified summit photo meets safety and GPS criteria.' : 'Evidence photo did not clearly show activity completion.'),
+          review_notes:
+            reviewNotes ||
+            (status === 'approved'
+              ? 'Verified summit photo meets environmental ethics and GPS criteria.'
+              : 'Evidence photo did not clearly verify activity completion.'),
         }),
       });
 
@@ -68,13 +75,17 @@ export default function AdminDashboardPage() {
               ? {
                   ...s,
                   status,
-                  review_notes: reviewNotes || (status === 'approved' ? 'Verified completion.' : 'Rejected.'),
+                  review_notes:
+                    reviewNotes || (status === 'approved' ? 'Verified completion.' : 'Rejected.'),
                   reviewed_at: new Date().toISOString(),
                 }
               : s
           )
         );
-        setActionMessage({ text: `Submission successfully marked as ${status}! Points ledger updated.`, type: 'success' });
+        setActionMessage({
+          text: `Submission successfully marked as ${status}! Points ledger updated atomically.`,
+          type: 'success',
+        });
         setTimeout(() => {
           setReviewingSub(null);
         }, 1500);
@@ -85,198 +96,226 @@ export default function AdminDashboardPage() {
     }
   };
 
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-8">
-      {/* Admin Header */}
-      <div className="p-8 rounded-3xl bg-gradient-to-r from-[#1e1333] via-[#140c24] to-[#0a0714] border border-[#38235e] shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-purple-300 bg-purple-950/90 px-3 py-1 rounded-full border border-purple-700 mb-2">
-            <ShieldCheck className="w-4 h-4 text-purple-400" />
-            <span>Administrator Verification Authority</span>
+  // Enforce access control presentation
+  if (role !== 'admin') {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-20 text-center space-y-4">
+        <div className="p-8 rounded-2xl bg-[#FFFDF8] border-2 border-[#D6CCBC] shadow-xs space-y-4">
+          <div className="w-12 h-12 rounded-full bg-[#EAE1D3] border border-[#B85F43] flex items-center justify-center text-[#B85F43] mx-auto">
+            <Lock className="w-6 h-6" />
           </div>
-          <h1 className="text-3xl sm:text-4xl font-black text-white">
-            Submission Review & Evidence Verification
+          <h1 className="text-xl font-bold text-[#292820] font-sans">
+            Administrative Access Restricted
           </h1>
-          <p className="text-xs sm:text-sm text-purple-200/80 max-w-xl mt-1">
-            Review user-submitted proof photos, validate coordinates, enforce safety compliance, and award verified points atomically to the ledger.
+          <p className="text-xs text-[#6D685C] leading-relaxed">
+            This section is restricted to authorized expedition reviewers. Ordinary traveler accounts
+            cannot access server review panels or award point ledger transactions.
           </p>
-        </div>
-
-        {/* Admin Role Status Badge & Quick Switcher */}
-        <div className="bg-[#120a22] p-4 rounded-2xl border border-[#2b184a] text-center shrink-0 space-y-2">
-          <div className="text-xs text-purple-300 font-semibold">Active Session Role</div>
-          <div className="text-lg font-black text-white flex items-center justify-center gap-2">
-            <span className={`w-2.5 h-2.5 rounded-full ${role === 'admin' ? 'bg-purple-400 animate-pulse' : 'bg-emerald-400'}`} />
-            <span className="uppercase">{role}</span>
-          </div>
-          {role !== 'admin' && (
+          <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3">
             <button
               type="button"
               onClick={() => switchDemoRole('admin')}
-              className="text-xs font-bold text-purple-400 hover:text-purple-300 underline"
+              className="btn-journal-terracotta text-xs py-2 px-4"
             >
-              Switch to Admin Mode
+              Simulate Admin Persona (Evaluator Test)
             </button>
-          )}
+            <Link href="/" className="btn-journal-secondary text-xs py-2 px-4">
+              Return Home
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full space-y-8">
+      {/* Admin Header */}
+      <div className="p-6 sm:p-8 rounded-2xl bg-[#FFFDF8] border-2 border-[#D6CCBC] shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div>
+          <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-[#B85F43] bg-[#EAE1D3] px-3 py-1 rounded-md border border-[#D6CCBC] mb-2">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>ADMINISTRATIVE EVIDENCE REVIEW</span>
+          </div>
+          <h1 className="text-2xl sm:text-4xl font-bold text-[#292820] font-sans">
+            Submission Review & Evidence Verification
+          </h1>
+          <p className="text-xs sm:text-sm text-[#6D685C] max-w-xl mt-1">
+            Inspect user-submitted photographic proof, validate trailhead coordinates, enforce safety
+            protocols, and award points atomically to the database ledger.
+          </p>
+        </div>
+
+        {/* Admin Role Status Badge */}
+        <div className="bg-[#F5F0E7] p-4 rounded-xl border border-[#D6CCBC] text-center shrink-0 space-y-1.5">
+          <div className="text-[10px] font-mono text-[#6D685C] uppercase tracking-wider">
+            Active Authorization
+          </div>
+          <div className="text-sm font-extrabold text-[#B85F43] flex items-center justify-center gap-2 font-mono">
+            <span className="w-2 h-2 rounded-full bg-[#B85F43]" />
+            <span>ROLE: ADMIN</span>
+          </div>
         </div>
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex items-center gap-2 border-b border-[#24173d] pb-3">
+      <div className="flex items-center gap-2 border-b border-[#D6CCBC] pb-3">
         {(['pending', 'approved', 'rejected', 'all'] as const).map((st) => (
           <button
             key={st}
             type="button"
             onClick={() => setFilterStatus(st)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold capitalize transition-all ${
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold capitalize transition-all ${
               filterStatus === st
-                ? 'bg-purple-600 text-white shadow'
-                : 'text-zinc-400 hover:text-white hover:bg-[#1a122e]'
+                ? 'btn-journal-primary'
+                : 'text-[#6D685C] hover:text-[#292820] hover:bg-[#EAE1D3]'
             }`}
           >
-            {st} Submissions ({submissions.filter((s) => st === 'all' || s.status === st).length})
+            {st} ({submissions.filter((s) => st === 'all' || s.status === st).length})
           </button>
         ))}
       </div>
 
-      {/* Submissions Queue Table */}
-      <div className="rounded-3xl bg-[#110c22] border border-[#251742] overflow-hidden shadow-xl">
-        <div className="p-5 border-b border-[#21143b] flex items-center justify-between">
-          <h2 className="text-base font-bold text-white">
-            Verification Queue ({filteredSubmissions.length})
-          </h2>
-          <span className="text-xs text-zinc-400">Database Table: public.submissions</span>
-        </div>
-
-        {filteredSubmissions.length === 0 ? (
-          <div className="p-12 text-center text-zinc-400 text-sm">
-            No submissions found in this category.
-          </div>
-        ) : (
-          <div className="divide-y divide-[#1e1338]">
-            {filteredSubmissions.map((sub) => (
+      {/* Submissions List Table */}
+      <div className="rounded-2xl bg-[#FFFDF8] border border-[#D6CCBC] overflow-hidden shadow-xs">
+        <div className="divide-y divide-[#D6CCBC]">
+          {filteredSubmissions.length === 0 ? (
+            <div className="p-12 text-center text-[#6D685C] text-xs">
+              No submissions found for filter: {filterStatus}.
+            </div>
+          ) : (
+            filteredSubmissions.map((sub) => (
               <div
                 key={sub.id}
-                className="p-5 hover:bg-[#181130] transition-colors flex flex-col md:flex-row md:items-center justify-between gap-4"
+                className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-[#F5F0E7] transition-colors"
               >
-                <div className="flex items-center gap-4">
-                  <img
-                    src={sub.evidence_url}
-                    alt={sub.activity_name}
-                    className="w-16 h-16 rounded-xl object-cover shrink-0 ring-1 ring-purple-600/40"
-                  />
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400 bg-purple-950 px-2 py-0.5 rounded">
+                <div className="flex items-start gap-4">
+                  <div className="w-16 h-16 rounded-xl overflow-hidden border border-[#D6CCBC] shrink-0 bg-[#EAE1D3]">
+                    <SafeImage
+                      src={sub.evidence_url}
+                      alt={sub.activity_name}
+                      aspectRatio="1/1"
+                      fallbackTitle="Proof Photo"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono font-bold uppercase text-[#777A53] bg-[#EAE1D3] px-2 py-0.5 rounded">
                         {sub.activity_category}
                       </span>
-                      <span className="text-xs text-zinc-400">
-                        By {sub.user_display_name} • {new Date(sub.submitted_at).toLocaleDateString()}
+                      <span className="text-xs font-bold text-[#292820] font-sans">
+                        {sub.activity_name}
                       </span>
                     </div>
-                    <div className="font-bold text-base text-white">
-                      {sub.activity_name}
+
+                    <div className="text-xs text-[#6D685C] flex items-center gap-3 font-mono">
+                      <span>Traveler: {sub.user_display_name || sub.user_id}</span>
+                      <span>•</span>
+                      <span>
+                        Date: {new Date(sub.submitted_at).toLocaleDateString()}
+                      </span>
                     </div>
-                    <div className="text-xs text-zinc-400 flex items-center gap-2 mt-0.5">
-                      <span>Reward: +{sub.points} pts</span>
-                      {sub.claimed_latitude && (
-                        <span>• GPS: {sub.claimed_latitude.toFixed(4)}, {sub.claimed_longitude?.toFixed(4)}</span>
-                      )}
-                    </div>
+
+                    <p className="text-xs text-[#6D685C] italic line-clamp-1">
+                      &quot;{sub.notes || 'No traveler notes provided.'}&quot;
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 self-end md:self-auto">
+                <div className="flex items-center gap-3 shrink-0">
                   <span
-                    className={`text-[11px] font-bold px-3 py-1 rounded-full uppercase ${
+                    className={`retro-stamp text-[10px] ${
                       sub.status === 'approved'
-                        ? 'bg-emerald-950 text-emerald-400 border border-emerald-800'
-                        : sub.status === 'pending'
-                        ? 'bg-amber-950 text-amber-300 border border-amber-800'
-                        : 'bg-rose-950 text-rose-300 border border-rose-800'
+                        ? 'text-[#777A53] border-[#777A53]'
+                        : sub.status === 'rejected'
+                        ? 'text-[#B85F43] border-[#B85F43]'
+                        : 'text-[#C6A45B] border-[#C6A45B]'
                     }`}
                   >
-                    {sub.status}
+                    {sub.status.toUpperCase()}
                   </span>
 
                   <button
                     type="button"
                     onClick={() => handleOpenReview(sub)}
-                    className="px-4 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition-colors"
+                    className="btn-journal-primary text-xs py-1.5 px-3 flex items-center gap-1.5"
                   >
-                    Review Proof &rarr;
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>Inspect Evidence</span>
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
+            ))
+          )}
+        </div>
       </div>
 
-      {/* Review Modal */}
+      {/* Review & Adjudication Modal */}
       {reviewingSub && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-[#130d24] border border-[#2e1a52] p-6 sm:p-8 rounded-3xl max-w-xl w-full shadow-2xl space-y-6 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-[#261642] pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#292820]/60 backdrop-blur-xs p-4">
+          <div className="bg-[#FFFDF8] border-2 border-[#D6CCBC] p-6 sm:p-8 rounded-2xl max-w-lg w-full shadow-xl space-y-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-[#D6CCBC] pb-3">
               <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">
-                  Verification Dossier
-                </span>
-                <h3 className="text-xl font-bold text-white">
-                  {reviewingSub.activity_name}
+                <h3 className="text-lg font-bold text-[#292820] font-sans">
+                  Inspect Submission #{reviewingSub.id.toUpperCase()}
                 </h3>
+                <p className="text-xs text-[#6D685C]">
+                  Evaluate photo authenticity, GPS timestamp, and safety standards.
+                </p>
               </div>
               <button
                 type="button"
                 onClick={() => setReviewingSub(null)}
-                className="text-zinc-400 hover:text-white"
+                className="text-[#6D685C] hover:text-[#292820]"
               >
                 ✕
               </button>
             </div>
 
-            {/* Evidence Image */}
-            <div className="rounded-2xl overflow-hidden border border-[#2a174a]">
-              <img
-                src={reviewingSub.evidence_url}
-                alt="Submitted Evidence"
-                className="w-full max-h-72 object-cover"
-              />
-            </div>
-
-            {/* Submission Metadata */}
-            <div className="grid grid-cols-2 gap-3 text-xs bg-[#0c0817] p-4 rounded-xl border border-[#21133b]">
-              <div>
-                <span className="text-zinc-500">Explorer:</span>
-                <div className="font-bold text-white">{reviewingSub.user_display_name}</div>
-              </div>
-              <div>
-                <span className="text-zinc-500">Points at Stake:</span>
-                <div className="font-bold text-emerald-400">+{reviewingSub.points} Points</div>
-              </div>
-              <div>
-                <span className="text-zinc-500">Claimed Coordinates:</span>
-                <div className="font-mono text-zinc-300">
-                  {reviewingSub.claimed_latitude || 'Not supplied'}, {reviewingSub.claimed_longitude || ''}
-                </div>
-              </div>
-              <div>
-                <span className="text-zinc-500">Submitted Timestamp:</span>
-                <div className="text-zinc-300">{new Date(reviewingSub.submitted_at).toLocaleString()}</div>
+            {/* Evidence Image Viewer */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#6D685C] block">
+                Encrypted Private Storage Photo:
+              </label>
+              <div className="rounded-xl overflow-hidden border border-[#D6CCBC]">
+                <SafeImage
+                  src={reviewingSub.evidence_url}
+                  alt={reviewingSub.activity_name}
+                  aspectRatio="16/9"
+                  fallbackTitle="Private Evidence Asset"
+                />
               </div>
             </div>
 
-            {/* Review Notes */}
-            <div>
-              <label className="block text-xs font-bold text-zinc-300 mb-1.5">
-                Official Reviewer Notes (Visible to Traveler in Memoir)
+            <div className="p-3.5 bg-[#F5F0E7] rounded-xl border border-[#D6CCBC] text-xs space-y-1.5 font-mono">
+              <div className="flex justify-between">
+                <span className="text-[#6D685C]">Target Activity:</span>
+                <span className="text-[#292820] font-bold">{reviewingSub.activity_name}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#6D685C]">Points on Approval:</span>
+                <span className="text-[#B85F43] font-bold">+{reviewingSub.points} PTS</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-[#6D685C]">Submitted Date:</span>
+                <span className="text-[#292820]">
+                  {new Date(reviewingSub.submitted_at).toLocaleString()}
+                </span>
+              </div>
+            </div>
+
+            {/* Reviewer Notes Field */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#6D685C] block">
+                Official Reviewer Notes / Audit Justification:
               </label>
               <textarea
-                rows={2}
+                rows={3}
                 value={reviewNotes}
                 onChange={(e) => setReviewNotes(e.target.value)}
-                placeholder="e.g. Verified summit marker and gear safety checklist."
-                className="w-full px-3.5 py-2.5 rounded-xl bg-[#0c0817] border border-[#261742] text-white text-xs focus:outline-none focus:border-purple-500"
+                placeholder="e.g. Verified summit landmark in photo matches topographical coordinates..."
+                className="w-full text-xs p-3 rounded-xl bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] focus:outline-hidden"
               />
             </div>
 
@@ -284,33 +323,33 @@ export default function AdminDashboardPage() {
               <div
                 className={`p-3 rounded-xl text-xs flex items-center gap-2 ${
                   actionMessage.type === 'success'
-                    ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
-                    : 'bg-rose-950 text-rose-300 border border-rose-800'
+                    ? 'bg-[#EAE1D3] text-[#777A53] border border-[#777A53]'
+                    : 'bg-[#F5F0E7] text-[#B85F43] border border-[#B85F43]'
                 }`}
               >
-                {actionMessage.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+                <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>{actionMessage.text}</span>
               </div>
             )}
 
-            {/* Decision Buttons */}
+            {/* Action Buttons */}
             <div className="flex gap-3 pt-2">
               <button
                 type="button"
                 disabled={actionLoading}
                 onClick={() => handleDecision('rejected')}
-                className="flex-1 py-3 rounded-xl text-xs font-bold bg-rose-900/60 hover:bg-rose-800 text-rose-200 border border-rose-700/60 transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-lg text-xs font-bold border border-[#B85F43] text-[#B85F43] hover:bg-[#B85F43]/10 transition-colors disabled:opacity-50"
               >
-                Reject Proof
+                Reject Submission
               </button>
 
               <button
                 type="button"
                 disabled={actionLoading}
                 onClick={() => handleDecision('approved')}
-                className="flex-1 py-3 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-950/60 transition-colors disabled:opacity-50"
+                className="btn-journal-primary flex-1 py-2.5 text-xs font-bold disabled:opacity-50"
               >
-                Approve & Award Points
+                {actionLoading ? 'Processing Ledger...' : 'Approve & Award Points'}
               </button>
             </div>
           </div>

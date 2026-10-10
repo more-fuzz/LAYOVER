@@ -23,6 +23,9 @@ export async function getActiveRewards(): Promise<RewardItem[]> {
           is_active: r.is_active,
           image_url: sampleMatch?.image_url ?? 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80',
           category: sampleMatch?.category ?? 'gear',
+          merchant_name: sampleMatch?.merchant_name ?? 'Trails & Tales Outfitter Depot',
+          merchant_url: sampleMatch?.merchant_url ?? 'https://example.com/outfitter',
+          usage_instructions: sampleMatch?.usage_instructions,
         };
       });
     }
@@ -38,21 +41,29 @@ export async function getUserRedemptions(userId: string): Promise<RedemptionItem
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('redemptions')
-      .select('*, rewards(name)')
+      .select('*, rewards(name, description, cost_points)')
       .eq('user_id', userId)
       .order('created_at', { ascending: false });
 
     if (!error && data && data.length > 0) {
-      return data.map((r: any) => ({
-        id: r.id,
-        user_id: r.user_id,
-        reward_id: r.reward_id,
-        reward_name: r.rewards?.name || 'Adventure Reward',
-        points_spent: r.points_spent,
-        status: r.status,
-        claim_code: `TT-CLAIM-${r.id.substring(0, 8).toUpperCase()}`,
-        created_at: r.created_at,
-      }));
+      return data.map((r: any) => {
+        const sampleReward = SAMPLE_REWARDS.find((s) => s.id === r.reward_id);
+        return {
+          id: r.id,
+          user_id: r.user_id,
+          reward_id: r.reward_id,
+          reward_name: r.rewards?.name || sampleReward?.name || 'Adventure Reward',
+          reward_description: r.rewards?.description || sampleReward?.description,
+          reward_image: sampleReward?.image_url || 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80',
+          points_spent: r.points_spent,
+          status: r.status,
+          claim_code: `TT-CLAIM-${r.id.substring(0, 8).toUpperCase()}`,
+          created_at: r.created_at,
+          merchant_name: sampleReward?.merchant_name || 'Trails & Tales Outfitter Depot',
+          merchant_url: sampleReward?.merchant_url,
+          usage_instructions: sampleReward?.usage_instructions,
+        };
+      });
     }
   } catch (err) {
     console.warn('Redemptions query fallback:', err);
@@ -61,10 +72,57 @@ export async function getUserRedemptions(userId: string): Promise<RedemptionItem
   return demoRedemptions.filter((r) => r.user_id === userId || r.user_id === 'u6');
 }
 
+export async function getRedemptionById(redemptionId: string): Promise<RedemptionItem | null> {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('redemptions')
+      .select('*, rewards(name, description, cost_points)')
+      .eq('id', redemptionId)
+      .single();
+
+    if (!error && data) {
+      const sampleReward = SAMPLE_REWARDS.find((s) => s.id === data.reward_id);
+      return {
+        id: data.id,
+        user_id: data.user_id,
+        reward_id: data.reward_id,
+        reward_name: (data as any).rewards?.name || sampleReward?.name || 'Adventure Reward',
+        reward_description: (data as any).rewards?.description || sampleReward?.description,
+        reward_image: sampleReward?.image_url || 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80',
+        points_spent: data.points_spent,
+        status: (data.status as 'pending' | 'fulfilled' | 'cancelled') || 'pending',
+        claim_code: `TT-CLAIM-${data.id.substring(0, 8).toUpperCase()}`,
+        created_at: data.created_at,
+        merchant_name: sampleReward?.merchant_name || 'Trails & Tales Outfitter Depot',
+        merchant_url: sampleReward?.merchant_url,
+        usage_instructions: sampleReward?.usage_instructions,
+      };
+    }
+  } catch (err) {
+    console.warn('Get redemption by ID error:', err);
+  }
+
+  const found = demoRedemptions.find((r) => r.id === redemptionId || r.claim_code === redemptionId);
+  if (found) {
+    const sampleReward = SAMPLE_REWARDS.find((s) => s.id === found.reward_id);
+    return {
+      ...found,
+      reward_description: found.reward_description || sampleReward?.description,
+      reward_image: found.reward_image || sampleReward?.image_url,
+      merchant_name: found.merchant_name || sampleReward?.merchant_name || 'Trails & Tales Outfitter Depot',
+      merchant_url: found.merchant_url || sampleReward?.merchant_url,
+      usage_instructions: found.usage_instructions || sampleReward?.usage_instructions,
+    };
+  }
+
+  return null;
+}
+
 export async function redeemReward(
   userId: string,
   rewardId: string
-): Promise<{ success: boolean; error?: string; claim_code?: string }> {
+): Promise<{ success: boolean; error?: string; claim_code?: string; redemption_id?: string }> {
   try {
     const supabase = await createClient();
 
@@ -121,8 +179,9 @@ export async function redeemReward(
           .eq('id', reward.id);
       }
 
-      const code = `TT-CLAIM-${(redemption?.id || reward.id).substring(0, 8).toUpperCase()}`;
-      return { success: true, claim_code: code };
+      const redId = redemption?.id || `red-${Date.now()}`;
+      const code = `TT-CLAIM-${redId.substring(0, 8).toUpperCase()}`;
+      return { success: true, claim_code: code, redemption_id: redId };
     }
   } catch (err: any) {
     console.warn('Supabase redemption error, using demo fallback:', err);
@@ -134,17 +193,23 @@ export async function redeemReward(
     return { success: false, error: 'Reward not found.' };
   }
 
+  const redId = `red-${Date.now()}`;
   const claimCode = `TT-CLAIM-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
   demoRedemptions.unshift({
-    id: `red-${Date.now()}`,
+    id: redId,
     user_id: userId,
     reward_id: reward.id,
     reward_name: reward.name,
+    reward_description: reward.description,
+    reward_image: reward.image_url,
     points_spent: reward.cost_points,
     status: 'fulfilled',
     claim_code: claimCode,
     created_at: new Date().toISOString(),
+    merchant_name: reward.merchant_name,
+    merchant_url: reward.merchant_url,
+    usage_instructions: reward.usage_instructions,
   });
 
-  return { success: true, claim_code: claimCode };
+  return { success: true, claim_code: claimCode, redemption_id: redId };
 }

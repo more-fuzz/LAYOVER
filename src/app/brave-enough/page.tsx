@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import MapComponent from '@/components/MapComponent';
+import SafeImage from '@/components/SafeImage';
 import { SAMPLE_DESTINATIONS, DestinationItem } from '@/data/sampleData';
 import {
   Ghost,
@@ -13,224 +14,229 @@ import {
   MapPin,
   ExternalLink,
   Sparkles,
-  Flame,
+  CheckCircle2,
   HelpCircle,
+  FileText,
 } from 'lucide-react';
 
 export default function BraveEnoughPage() {
   const spookyDestinations = SAMPLE_DESTINATIONS.filter((d) => d.is_spooky);
   const [selectedDestId, setSelectedDestId] = useState<string | undefined>(undefined);
-  const [braveryScore, setBraveryScore] = useState<number>(0);
-  const [completedQuests, setCompletedQuests] = useState<string[]>([]);
+  const [investigatedIds, setInvestigatedIds] = useState<string[]>([]);
 
-  const toggleQuest = (id: string) => {
-    if (completedQuests.includes(id)) {
-      setCompletedQuests(completedQuests.filter((q) => q !== id));
-      setBraveryScore((prev) => Math.max(0, prev - 25));
+  const toggleInvestigated = (id: string) => {
+    if (investigatedIds.includes(id)) {
+      setInvestigatedIds(investigatedIds.filter((item) => item !== id));
     } else {
-      setCompletedQuests([...completedQuests, id]);
-      setBraveryScore((prev) => prev + 25);
+      setInvestigatedIds([...investigatedIds, id]);
     }
   };
 
   return (
-    <div className="w-full bg-gradient-to-b from-[#0a0714] via-[#0d0918] to-[#0a100d] text-zinc-100 min-h-screen py-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
-        {/* Header Hero */}
-        <div className="relative rounded-3xl p-8 sm:p-12 overflow-hidden border border-[#2d1c4d] bg-gradient-to-r from-[#170e2e] via-[#120a24] to-[#0a0614] shadow-2xl">
-          <div className="absolute -right-12 -top-12 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 max-w-3xl space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/80 border border-purple-500/50 text-purple-300 text-xs font-bold shadow-lg">
-              <Ghost className="w-4 h-4 text-purple-400 animate-bounce" />
-              <span>Dedicated Spooky & Folklore Exploration</span>
-            </div>
-
-            <h1 className="text-3xl sm:text-5xl font-black text-white tracking-tight leading-tight">
-              &quot;Am I Brave Enough?&quot;{" "}
-              <span className="bg-gradient-to-r from-purple-400 via-pink-300 to-amber-300 bg-clip-text text-transparent">
-                Folklore Enigmas & Lost Ruins
-              </span>
-            </h1>
-
-            <p className="text-sm sm:text-base text-purple-200/80 leading-relaxed">
-              Journey into the world’s most enigmatic subterranean troglodyte labyrinths, mist-shrouded twisted oak groves, and desert ghost towns. Uncover verifiable historical foundations alongside centuries-old local legends.
-            </p>
-
-            {/* Strict Safety Advisory Banner */}
-            <div className="p-4 rounded-2xl bg-[#24133b]/80 border border-purple-700/60 flex items-start gap-3 text-xs text-purple-200">
-              <ShieldCheck className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-              <div>
-                <span className="font-bold text-amber-300">Responsible Exploration Protocol: </span>
-                All listed sites are officially approved heritage locations. We strictly prohibit visiting restricted or unsafe locations. Never trespass, always visit during designated daylight hours, and adhere to Leave-No-Trace principles.
-              </div>
-            </div>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full space-y-10">
+      {/* Editorial Header Banner */}
+      <div className="bg-[#FFFDF8] border-2 border-[#D6CCBC] rounded-3xl p-8 sm:p-12 shadow-sm space-y-6 relative overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#D6CCBC] pb-4">
+          <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-[#B85F43] bg-[#EAE1D3] px-3 py-1 rounded-md border border-[#D6CCBC]">
+            <Ghost className="w-3.5 h-3.5 text-[#B85F43]" />
+            <span>FIELD FOLKLORE & ANCIENT MYSTERIES</span>
           </div>
+          <span className="retro-stamp text-[10px]">DAYLIGHT HERITAGE STUDY</span>
         </div>
 
-        {/* Interactive Bravery Tracker Widget */}
-        <div className="p-6 rounded-3xl bg-[#130d22] border border-[#2a1a45] shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-purple-950/90 border border-purple-600 flex items-center justify-center text-2xl shadow-inner">
-              👻
-            </div>
+        <div className="max-w-3xl space-y-4">
+          <h1 className="text-3xl sm:text-5xl font-bold text-[#292820] font-sans leading-tight">
+            &quot;Am I Brave Enough?&quot; Field Studies
+          </h1>
+          <p className="text-sm sm:text-base text-[#6D685C] leading-relaxed">
+            A restrained exploration of the world&apos;s most intriguing geological enigmas, abandoned
+            archaeological citadels, and centuries-old regional folklore. Each dossier separates
+            verified historical facts from oral lore.
+          </p>
+
+          {/* Strict Safety Protocol Advisory */}
+          <div className="p-4 rounded-xl bg-[#EAE1D3]/70 border border-[#D6CCBC] flex items-start gap-3 text-xs text-[#6D685C]">
+            <ShieldCheck className="w-5 h-5 text-[#B85F43] shrink-0 mt-0.5" />
             <div>
-              <div className="text-xs uppercase tracking-wider font-bold text-purple-400">
-                Spooky Explorer Index
-              </div>
-              <div className="text-xl font-black text-white">
-                {braveryScore === 100 ? 'Mythic Crypt Walker 🏆' : braveryScore >= 50 ? 'Enigma Seeker 🔮' : 'Curious Wanderer 🕯️'}
-              </div>
+              <span className="font-bold text-[#292820]">Ethical Field Protocol: </span>
+              All catalogued sites are officially registered public heritage monuments. We strictly
+              forbid night trespassing, violating Archaeological Survey or park guidelines, or treating
+              cultural tragedy as entertainment. Always explore during daylight hours with certified guides.
             </div>
           </div>
+        </div>
+      </div>
 
-          <div className="flex-1 max-w-md w-full">
-            <div className="flex justify-between text-xs font-semibold text-purple-300 mb-1.5">
-              <span>Bravery Progress</span>
-              <span>{completedQuests.length} / {spookyDestinations.length} Investigated</span>
+      {/* Field Dossier Progress Widget */}
+      <div className="p-5 rounded-2xl bg-[#FFFDF8] border border-[#D6CCBC] shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-xl bg-[#EAE1D3] border border-[#D6CCBC] flex items-center justify-center text-xl shrink-0">
+            📜
+          </div>
+          <div>
+            <div className="text-[10px] uppercase font-mono font-bold text-[#777A53]">
+              Dossier Reconnaissance Tracker
             </div>
-            <div className="w-full bg-[#201538] h-3 rounded-full overflow-hidden p-0.5 border border-[#37235e]">
-              <div
-                className="bg-gradient-to-r from-purple-500 to-amber-400 h-full rounded-full transition-all duration-500"
-                style={{ width: `${(completedQuests.length / spookyDestinations.length) * 100}%` }}
-              />
+            <div className="text-base font-bold text-[#292820] font-sans">
+              {investigatedIds.length === spookyDestinations.length
+                ? 'Master Folklore Cartographer 🏆'
+                : investigatedIds.length > 0
+                ? 'Active Field Investigator'
+                : 'Curious Historical Wanderer'}
             </div>
           </div>
         </div>
 
-        {/* Interactive Map of Spooky Destinations */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-white flex items-center gap-2">
-              <Compass className="w-5 h-5 text-purple-400" />
-              <span>Map of Approved Enigmatic Destinations</span>
-            </h2>
-            <span className="text-xs text-purple-300">Click a marker to inspect lore</span>
+        <div className="flex-1 max-w-md w-full">
+          <div className="flex justify-between text-xs font-mono font-bold text-[#6D685C] mb-1.5">
+            <span>Dossiers Studied:</span>
+            <span>
+              {investigatedIds.length} / {spookyDestinations.length} Recorded
+            </span>
           </div>
-
-          <MapComponent
-            destinations={spookyDestinations}
-            selectedId={selectedDestId}
-            height="460px"
-            center={[35.0, 25.0]}
-            zoom={3}
-            onSelectMarker={(item) => setSelectedDestId(item.id)}
-          />
+          <div className="w-full bg-[#EAE1D3] h-2.5 rounded-full overflow-hidden border border-[#D6CCBC]">
+            <div
+              className="bg-[#B85F43] h-full rounded-full transition-all duration-300"
+              style={{
+                width: `${(investigatedIds.length / spookyDestinations.length) * 100}%`,
+              }}
+            />
+          </div>
         </div>
+      </div>
 
-        {/* Detailed Destination Stories & Legends */}
-        <div className="space-y-6 pt-4">
-          <h2 className="text-2xl font-black text-white">
-            Enigmatic Expeditions & Lore
+      {/* Interactive Map of Enigmatic Destinations */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between border-b border-[#D6CCBC] pb-2">
+          <h2 className="text-lg font-bold text-[#292820] flex items-center gap-2 font-sans">
+            <Compass className="w-4 h-4 text-[#777A53]" />
+            <span>Map of Approved Enigmatic Locations</span>
           </h2>
+          <span className="text-xs font-mono text-[#8E8675]">OSRM Route Planning Supported</span>
+        </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {spookyDestinations.map((dest) => {
-              const isInvestigated = completedQuests.includes(dest.id);
-              return (
-                <div
-                  id={dest.id}
-                  key={dest.id}
-                  className={`rounded-3xl bg-[#120c22] border overflow-hidden shadow-2xl transition-all ${
-                    selectedDestId === dest.id
-                      ? 'border-purple-400 ring-2 ring-purple-500/50'
-                      : 'border-[#26173d] hover:border-purple-600/70'
-                  }`}
-                >
-                  <div className="relative h-60 w-full">
-                    <img
-                      src={dest.image_url}
-                      alt={dest.name}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#120c22] via-transparent to-black/40" />
-                    <div className="absolute top-4 left-4 bg-purple-950/90 border border-purple-700 px-3 py-1 rounded-lg text-xs font-bold text-purple-300 uppercase">
-                      {dest.category.replace('_', ' ')}
-                    </div>
-                    {dest.spooky_rating && (
-                      <div className="absolute top-4 right-4 bg-black/80 px-3 py-1 rounded-full text-xs font-bold text-amber-300 border border-amber-600/40">
-                        Spook Index: {dest.spooky_rating}/5 👻
-                      </div>
-                    )}
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <div className="text-xs text-purple-400 font-semibold mb-1">
-                        📍 {dest.location_name}
-                      </div>
-                      <h3 className="text-2xl font-bold text-white">
-                        {dest.name}
-                      </h3>
-                    </div>
+        <MapComponent
+          destinations={spookyDestinations}
+          selectedId={selectedDestId}
+          height="480px"
+          center={[27.0, 76.0]}
+          zoom={4}
+          enableRouting={true}
+          onSelectMarker={(item) => setSelectedDestId(item.id)}
+        />
+      </div>
+
+      {/* Detailed Dossiers Grid */}
+      <div className="space-y-6 pt-2">
+        <div className="border-b border-[#D6CCBC] pb-2">
+          <h2 className="text-xl font-bold text-[#292820] font-sans">
+            Archaeological & Geological Dossiers
+          </h2>
+          <p className="text-xs text-[#6D685C]">
+            Verified field records, historical timeline context, and documented oral folklore.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {spookyDestinations.map((dest) => {
+            const isStudied = investigatedIds.includes(dest.id);
+            const isFocused = selectedDestId === dest.id;
+
+            return (
+              <div
+                id={dest.id}
+                key={dest.id}
+                className={`rounded-2xl bg-[#FFFDF8] border overflow-hidden shadow-xs transition-all ${
+                  isFocused
+                    ? 'border-[#B85F43] ring-2 ring-[#B85F43]/30'
+                    : 'border-[#D6CCBC] hover:border-[#777A53]'
+                }`}
+              >
+                <div className="relative w-full">
+                  <SafeImage
+                    src={dest.image_url}
+                    alt={dest.name}
+                    aspectRatio="16/9"
+                    fallbackTitle={dest.name}
+                  />
+                  <div className="absolute top-3 left-3 bg-[#FFFDF8]/90 px-2 py-0.5 rounded text-[10px] font-mono font-bold text-[#B85F43] uppercase border border-[#D6CCBC]">
+                    {dest.category.replace('_', ' ')}
                   </div>
-
-                  <div className="p-6 space-y-4">
-                    <p className="text-xs sm:text-sm text-zinc-300 leading-relaxed">
-                      {dest.description}
-                    </p>
-
-                    {/* Historical Fact vs Local Legend (Structured Distinction) */}
-                    <div className="space-y-3 pt-2">
-                      {dest.historical_context && (
-                        <div className="p-4 rounded-2xl bg-[#18112c] border border-[#2f1f50] text-xs">
-                          <div className="font-bold text-purple-300 mb-1 flex items-center gap-1.5">
-                            <BookOpen className="w-3.5 h-3.5" />
-                            <span>Historical & Geological Fact</span>
-                          </div>
-                          <p className="text-zinc-300 leading-relaxed">
-                            {dest.historical_context}
-                          </p>
-                        </div>
-                      )}
-
-                      {dest.folklore_legend && (
-                        <div className="p-4 rounded-2xl bg-[#201236] border border-purple-800/60 text-xs">
-                          <div className="font-bold text-amber-300 mb-1 flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            <span>Local Folklore & Enigma</span>
-                          </div>
-                          <p className="text-purple-200/90 italic leading-relaxed">
-                            &quot;{dest.folklore_legend}&quot;
-                          </p>
-                        </div>
-                      )}
-
-                      {dest.safety_advisory && (
-                        <div className="p-3 rounded-xl bg-amber-950/30 border border-amber-800/40 text-xs text-amber-300/90 flex items-start gap-2">
-                          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                          <span>{dest.safety_advisory}</span>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="pt-4 border-t border-[#23153d] flex items-center justify-between">
-                      <button
-                        type="button"
-                        onClick={() => toggleQuest(dest.id)}
-                        className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
-                          isInvestigated
-                            ? 'bg-purple-600 text-white'
-                            : 'bg-[#201538] hover:bg-[#2c1d4d] text-purple-200 border border-[#3b2566]'
-                        }`}
-                      >
-                        {isInvestigated ? '✓ Marked as Researched' : '+ Mark as Researched'}
-                      </button>
-
-                      {dest.source_url && (
-                        <a
-                          href={dest.source_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs font-semibold text-purple-400 hover:text-purple-300 flex items-center gap-1"
-                        >
-                          <span>Official Heritage Docs</span>
-                          <ExternalLink className="w-3 h-3" />
-                        </a>
-                      )}
-                    </div>
+                  <div className="absolute top-3 right-3 bg-[#EAE1D3] text-[#292820] border border-[#D6CCBC] px-2 py-0.5 rounded text-[10px] font-mono font-bold">
+                    DAYLIGHT ONLY
                   </div>
                 </div>
-              );
-            })}
-          </div>
+
+                <div className="p-6 space-y-4">
+                  <div>
+                    <div className="flex items-center gap-1.5 text-xs text-[#6D685C] mb-1 font-mono">
+                      <MapPin className="w-3.5 h-3.5 text-[#B85F43]" />
+                      <span>{dest.location_name}</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-[#292820] font-sans">{dest.name}</h3>
+                    <p className="text-xs sm:text-sm text-[#6D685C] mt-2 leading-relaxed">
+                      {dest.description}
+                    </p>
+                  </div>
+
+                  {/* Fact vs Folklore Comparison Box */}
+                  <div className="space-y-2.5 pt-2 border-t border-[#D6CCBC]">
+                    <div className="p-3 bg-[#F5F0E7] rounded-xl border border-[#D6CCBC] space-y-1">
+                      <div className="text-[10px] font-mono font-bold uppercase text-[#777A53] flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        <span>Verified Historical & Scientific Context</span>
+                      </div>
+                      <p className="text-xs text-[#292820] leading-relaxed">
+                        {dest.historical_context ||
+                          'Registered historical monument with official preservation status.'}
+                      </p>
+                    </div>
+
+                    {dest.folklore_legend && (
+                      <div className="p-3 bg-[#FFFDF8] rounded-xl border border-[#D6CCBC] space-y-1">
+                        <div className="text-[10px] font-mono font-bold uppercase text-[#B85F43] flex items-center gap-1">
+                          <Ghost className="w-3 h-3" />
+                          <span>Oral Folklore & Legends (Unverified)</span>
+                        </div>
+                        <p className="text-xs text-[#6D685C] italic leading-relaxed">
+                          &quot;{dest.folklore_legend}&quot;
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Action Bar */}
+                  <div className="pt-3 border-t border-[#D6CCBC] flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => toggleInvestigated(dest.id)}
+                      className={`text-xs font-mono font-bold py-1.5 px-3 rounded-lg flex items-center gap-1.5 transition-colors ${
+                        isStudied
+                          ? 'bg-[#EAE1D3] text-[#777A53] border border-[#D6CCBC]'
+                          : 'btn-journal-secondary'
+                      }`}
+                    >
+                      <CheckCircle2
+                        className={`w-3.5 h-3.5 ${
+                          isStudied ? 'text-[#777A53]' : 'text-[#8E8675]'
+                        }`}
+                      />
+                      <span>{isStudied ? 'Dossier Recorded' : 'Mark as Studied'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDestId(dest.id)}
+                      className="text-xs font-bold text-[#B85F43] hover:underline flex items-center gap-1"
+                    >
+                      <span>Focus on Map</span>
+                      <Compass className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

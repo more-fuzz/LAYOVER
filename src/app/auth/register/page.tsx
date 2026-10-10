@@ -41,35 +41,35 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-[#101b15] p-8 rounded-3xl border border-[#1f3529] shadow-2xl">
+      <div className="max-w-md w-full space-y-6 bg-[#FFFDF8] p-8 rounded-2xl border-2 border-[#D6CCBC] shadow-sm">
         <div className="text-center">
-          <div className="inline-flex w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 items-center justify-center shadow-lg shadow-emerald-950/50 mb-3">
-            <Compass className="w-6 h-6 text-white" />
+          <div className="inline-flex w-12 h-12 rounded-xl bg-[#EAE1D3] border border-[#D6CCBC] items-center justify-center mb-3">
+            <Compass className="w-6 h-6 text-[#777A53]" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-            Join Trails & Tales
-          </h2>
-          <p className="mt-2 text-xs text-zinc-400">
-            Create your traveler passport and start earning verified adventure points
+          <h1 className="text-2xl font-bold text-[#292820] font-sans">
+            Register Explorer Passport
+          </h1>
+          <p className="mt-1 text-xs text-[#6D685C]">
+            Create your traveler identity and start earning verified adventure points.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-950/70 border border-rose-800 text-rose-200 text-xs">
+            <div className="p-3 rounded-lg bg-[#FFFDF8] border border-[#B85F43] text-[#B85F43] text-xs">
               {errorMsg}
             </div>
           )}
 
           {successMsg && (
-            <div className="p-4 rounded-xl bg-emerald-950/80 border border-emerald-700 text-emerald-200 text-xs flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+            <div className="p-3.5 rounded-lg bg-[#EAE1D3] border border-[#777A53] text-[#777A53] text-xs flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
               <span>{successMsg}</span>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-zinc-300 mb-1">
+            <label className="block text-xs font-mono font-bold uppercase text-[#6D685C] mb-1">
               Explorer Display Name
             </label>
             <input
@@ -78,12 +78,12 @@ export default function RegisterPage() {
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="e.g. Alex Mercer"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b1410] border border-[#1d3326] text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full px-3.5 py-2 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] text-xs focus:outline-hidden focus:border-[#777A53]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-300 mb-1">
+            <label className="block text-xs font-mono font-bold uppercase text-[#6D685C] mb-1">
               Email Address
             </label>
             <input
@@ -92,12 +92,12 @@ export default function RegisterPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="alex@traveler.com"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b1410] border border-[#1d3326] text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full px-3.5 py-2 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] text-xs focus:outline-hidden focus:border-[#777A53]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-300 mb-1">
+            <label className="block text-xs font-mono font-bold uppercase text-[#6D685C] mb-1">
               Password
             </label>
             <input
@@ -107,7 +107,7 @@ export default function RegisterPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Minimum 6 characters"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b1410] border border-[#1d3326] text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full px-3.5 py-2 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] text-xs focus:outline-hidden focus:border-[#777A53]"
             />
           </div>
 
@@ -117,25 +117,26 @@ export default function RegisterPage() {
               id="terms"
               checked={termsAccepted}
               onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="mt-0.5 rounded bg-[#0b1410] border-[#1d3326] text-emerald-600 focus:ring-0"
+              className="mt-0.5 rounded border-[#D6CCBC] text-[#777A53] focus:ring-0"
             />
-            <label htmlFor="terms" className="text-[11px] text-zinc-400 leading-snug">
-              I pledge to practice Leave-No-Trace outdoor ethics, respect cultural heritage sites, and adhere to mandatory safety protocols.
+            <label htmlFor="terms" className="text-[11px] text-[#6D685C] leading-snug">
+              I pledge to practice Leave-No-Trace outdoor ethics, respect cultural heritage sites,
+              and adhere to mandatory safety protocols.
             </label>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-lg shadow-emerald-950/60 transition-all disabled:opacity-50"
+            className="btn-journal-terracotta w-full py-2.5 text-xs font-bold disabled:opacity-50"
           >
             {loading ? 'Creating Passport...' : 'Create Account'}
           </button>
         </form>
 
-        <div className="text-center text-xs text-zinc-400">
+        <div className="text-center text-xs text-[#6D685C]">
           Already registered?{' '}
-          <Link href="/auth/login" className="font-bold text-emerald-400 hover:text-emerald-300">
+          <Link href="/auth/login" className="font-bold text-[#777A53] hover:underline">
             Sign In here &rarr;
           </Link>
         </div>

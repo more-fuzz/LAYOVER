@@ -27,6 +27,7 @@ export async function POST(
       status: 'ok',
       message: 'Reward redeemed successfully! Your claim voucher code is ready.',
       claim_code: result.claim_code,
+      redemption_id: result.redemption_id,
     });
   } catch (error: any) {
     return NextResponse.json(

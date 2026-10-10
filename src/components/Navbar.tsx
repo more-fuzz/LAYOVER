@@ -27,65 +27,68 @@ export default function Navbar() {
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
 
   const navLinks = [
-    { href: '/explorer', label: 'Explorer', icon: Compass },
-    { href: '/brave-enough', label: 'Am I Brave Enough?', icon: Ghost, highlight: true },
-    { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
-    { href: '/rewards', label: 'Rewards', icon: Gift },
-    { href: '/memoir', label: 'My Memoir', icon: BookOpen },
+    { href: '/', label: 'Discover' },
+    { href: '/explorer', label: 'Adventure Map' },
+    { href: '/arena', label: 'Adventure Arena' },
+    { href: '/brave-enough', label: 'Am I Brave Enough?' },
+    { href: '/memoir', label: 'Adventure Memoir' },
+    { href: '/rewards', label: 'Rewards' },
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-[#0d1612]/95 backdrop-blur-md border-b border-[#1b2b22] text-zinc-100 shadow-lg">
+    <header className="sticky top-0 z-50 bg-[#FFFDF8] border-b border-[#D6CCBC] text-[#292820] shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-md shadow-emerald-950/40 group-hover:scale-105 transition-transform">
-              <Compass className="w-5 h-5 text-white animate-spin-slow" />
+            <div className="w-9 h-9 rounded-lg bg-[#EAE1D3] border border-[#D6CCBC] flex items-center justify-center text-[#777A53] group-hover:border-[#777A53] transition-colors">
+              <Compass className="w-5 h-5 text-[#777A53]" />
             </div>
-            <div>
-              <span className="font-extrabold text-lg sm:text-xl tracking-tight bg-gradient-to-r from-emerald-400 via-teal-200 to-amber-200 bg-clip-text text-transparent">
-                Trails & Tales
-              </span>
-              <span className="hidden sm:inline-block ml-2 text-[10px] font-semibold tracking-wider uppercase text-emerald-400/80 bg-emerald-950/80 px-2 py-0.5 rounded-full border border-emerald-800/60">
-                Adventure
-              </span>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-base sm:text-lg tracking-tight text-[#292820] font-sans">
+                  Trails & Tales
+                </span>
+                <span className="hidden sm:inline-block text-[9px] font-mono font-bold tracking-wider uppercase text-[#777A53] bg-[#EAE1D3] px-1.5 py-0.5 rounded border border-[#D6CCBC]">
+                  Field Guide
+                </span>
+              </div>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => {
-              const Icon = link.icon;
-              const isActive = pathname === link.href;
+              const isActive =
+                link.href === '/'
+                  ? pathname === '/'
+                  : pathname.startsWith(link.href);
               return (
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
                     isActive
-                      ? 'bg-emerald-900/40 text-emerald-300 border border-emerald-700/50 shadow-inner'
-                      : link.highlight
-                      ? 'text-amber-300 hover:bg-amber-950/30 hover:text-amber-200'
-                      : 'text-zinc-300 hover:bg-[#15241c] hover:text-white'
+                      ? 'bg-[#EAE1D3] text-[#292820] font-bold border border-[#D6CCBC]'
+                      : 'text-[#6D685C] hover:text-[#292820] hover:bg-[#F5F0E7]'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${link.highlight ? 'text-amber-400 animate-pulse' : ''}`} />
-                  <span>{link.label}</span>
+                  {link.label}
                 </Link>
               );
             })}
 
+            {/* Hidden Admin Section: ONLY visible if authenticated user has admin role */}
             {role === 'admin' && (
               <Link
                 href="/admin"
-                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold transition-all ${
-                  pathname === '/admin'
-                    ? 'bg-purple-900/60 text-purple-200 border border-purple-600'
-                    : 'text-purple-300 hover:bg-purple-950/40'
+                className={`ml-1 flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold transition-colors ${
+                  pathname.startsWith('/admin')
+                    ? 'bg-[#B85F43] text-white'
+                    : 'text-[#B85F43] bg-[#EAE1D3] border border-[#B85F43]/40 hover:bg-[#B85F43]/10'
                 }`}
               >
-                <ShieldCheck className="w-4 h-4 text-purple-400" />
+                <ShieldCheck className="w-3.5 h-3.5" />
                 <span>Admin Review</span>
               </Link>
             )}
@@ -93,37 +96,39 @@ export default function Navbar() {
 
           {/* Right Action Bar */}
           <div className="flex items-center gap-3">
-            {/* Points Counter Pill */}
+            {/* Verified Points Stamp Pill */}
             <Link
               href="/rewards"
-              className="flex items-center gap-1.5 bg-gradient-to-r from-emerald-950 to-[#122b1f] border border-emerald-700/60 hover:border-emerald-500 px-3 py-1.5 rounded-full shadow-inner text-xs font-bold text-emerald-300 transition-colors"
+              className="flex items-center gap-1.5 bg-[#EAE1D3] border border-[#D6CCBC] hover:border-[#777A53] px-3 py-1.5 rounded-lg text-xs font-mono font-bold text-[#777A53] transition-colors"
               title="Verified Adventure Points"
             >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
-              <span>{profile.points.toLocaleString()} pts</span>
+              <Sparkles className="w-3.5 h-3.5 text-[#C6A45B]" />
+              <span>{profile.points.toLocaleString()} PTS</span>
             </Link>
 
-            {/* Quick Evaluator Role Toggle */}
-            <div className="hidden lg:flex items-center bg-[#13221a] p-0.5 rounded-lg border border-[#1f3529] text-[11px] font-semibold">
+            {/* Evaluator Role Toggle (Compact for testing) */}
+            <div className="hidden sm:flex items-center bg-[#EAE1D3] p-0.5 rounded-md border border-[#D6CCBC] text-[10px] font-mono font-bold">
               <button
                 type="button"
                 onClick={() => switchDemoRole('traveler')}
-                className={`px-2 py-1 rounded-md transition-all ${
+                className={`px-2 py-0.5 rounded transition-all ${
                   role === 'traveler'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    ? 'bg-[#FFFDF8] text-[#292820] shadow-xs'
+                    : 'text-[#6D685C] hover:text-[#292820]'
                 }`}
+                title="Switch to Explorer persona"
               >
                 Traveler
               </button>
               <button
                 type="button"
                 onClick={() => switchDemoRole('admin')}
-                className={`px-2 py-1 rounded-md transition-all ${
+                className={`px-2 py-0.5 rounded transition-all ${
                   role === 'admin'
-                    ? 'bg-purple-600 text-white shadow-sm'
-                    : 'text-zinc-400 hover:text-zinc-200'
+                    ? 'bg-[#B85F43] text-white shadow-xs'
+                    : 'text-[#6D685C] hover:text-[#292820]'
                 }`}
+                title="Switch to Admin persona to review submissions"
               >
                 Admin
               </button>
@@ -134,85 +139,83 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                className="flex items-center gap-2 p-1 rounded-full bg-[#15241c] hover:bg-[#1d3326] border border-[#223d2e] transition-colors focus:outline-none"
+                className="flex items-center gap-1.5 p-1 rounded-lg bg-[#EAE1D3] hover:bg-[#D6CCBC]/60 border border-[#D6CCBC] transition-colors focus:outline-hidden"
               >
                 <img
                   src={profile.avatar_url}
                   alt={profile.display_name}
-                  className="w-8 h-8 rounded-full object-cover ring-2 ring-emerald-500/50"
+                  className="w-7 h-7 rounded-md object-cover border border-[#D6CCBC]"
                 />
-                <ChevronDown className="w-3.5 h-3.5 text-zinc-400 mr-1 hidden sm:inline" />
+                <ChevronDown className="w-3.5 h-3.5 text-[#6D685C]" />
               </button>
 
               {userDropdownOpen && (
                 <div
-                  className="absolute right-0 mt-2 w-56 bg-[#101b15] border border-[#21382b] rounded-xl shadow-2xl py-2 z-50 text-sm"
+                  className="absolute right-0 mt-2 w-56 bg-[#FFFDF8] border-2 border-[#D6CCBC] rounded-xl shadow-lg py-2 z-50 text-xs"
                   onClick={() => setUserDropdownOpen(false)}
                 >
-                  <div className="px-4 py-2 border-b border-[#1b2f24]">
-                    <div className="font-semibold text-zinc-100">{profile.display_name}</div>
-                    <div className="text-xs text-zinc-400">@{profile.username}</div>
-                    <div className="mt-1.5 flex items-center gap-1.5">
-                      <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                        role === 'admin' ? 'bg-purple-900/70 text-purple-300' : 'bg-emerald-950 text-emerald-400'
-                      }`}>
-                        {role}
+                  <div className="px-4 py-2 border-b border-[#D6CCBC]">
+                    <div className="font-bold text-[#292820] font-sans">{profile.display_name}</div>
+                    <div className="text-[11px] text-[#6D685C] font-mono">@{profile.username}</div>
+                    <div className="mt-1 flex items-center gap-1.5">
+                      <span className="retro-stamp text-[9px]">
+                        ROLE: {role.toUpperCase()}
                       </span>
-                      {isDemoUser && (
-                        <span className="text-[10px] text-amber-400/90 bg-amber-950/60 px-1.5 py-0.5 rounded">
-                          Prototype Mode
-                        </span>
-                      )}
                     </div>
                   </div>
 
                   <Link
                     href="/dashboard"
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-[#17271e] text-zinc-200 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-[#292820] hover:bg-[#EAE1D3] transition-colors"
                   >
-                    <User className="w-4 h-4 text-emerald-400" />
-                    Dashboard
+                    <User className="w-3.5 h-3.5 text-[#777A53]" />
+                    <span>Traveler Dashboard</span>
                   </Link>
+
                   <Link
                     href="/profile"
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-[#17271e] text-zinc-200 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-[#292820] hover:bg-[#EAE1D3] transition-colors"
                   >
-                    <User className="w-4 h-4 text-emerald-400" />
-                    My Profile
+                    <User className="w-3.5 h-3.5 text-[#777A53]" />
+                    <span>My Profile</span>
                   </Link>
+
                   <Link
                     href="/memoir"
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-[#17271e] text-zinc-200 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-[#292820] hover:bg-[#EAE1D3] transition-colors"
                   >
-                    <BookOpen className="w-4 h-4 text-teal-400" />
-                    Adventure Memoir
+                    <BookOpen className="w-3.5 h-3.5 text-[#777A53]" />
+                    <span>Adventure Memoir</span>
                   </Link>
+
+                  {/* Show Admin review panel only when admin */}
                   {role === 'admin' && (
                     <Link
                       href="/admin"
-                      className="flex items-center gap-2 px-4 py-2 hover:bg-purple-950/50 text-purple-300 transition-colors"
+                      className="flex items-center gap-2 px-4 py-2 text-[#B85F43] hover:bg-[#EAE1D3] transition-colors font-bold"
                     >
-                      <ShieldCheck className="w-4 h-4 text-purple-400" />
-                      Admin Review Panel
+                      <ShieldCheck className="w-3.5 h-3.5 text-[#B85F43]" />
+                      <span>Admin Review Panel</span>
                     </Link>
                   )}
+
                   <Link
                     href="/auth/login"
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-[#17271e] text-zinc-300 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 text-[#6D685C] hover:bg-[#EAE1D3] transition-colors"
                   >
-                    <ShieldCheck className="w-4 h-4 text-blue-400" />
-                    Auth & Sign In
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#6D685C]" />
+                    <span>Authentication & Keys</span>
                   </Link>
 
-                  <div className="border-t border-[#1b2f24] my-1" />
+                  <div className="border-t border-[#D6CCBC] my-1" />
 
                   <button
                     type="button"
                     onClick={() => signOut()}
-                    className="w-full text-left flex items-center gap-2 px-4 py-2 text-rose-300 hover:bg-rose-950/30 transition-colors"
+                    className="w-full text-left flex items-center gap-2 px-4 py-2 text-[#B85F43] hover:bg-[#EAE1D3] transition-colors"
                   >
-                    <LogOut className="w-4 h-4 text-rose-400" />
-                    Sign Out
+                    <LogOut className="w-3.5 h-3.5" />
+                    <span>Sign Out</span>
                   </button>
                 </div>
               )}
@@ -222,9 +225,9 @@ export default function Navbar() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-zinc-400 hover:text-white hover:bg-[#15241c] focus:outline-none"
+              className="lg:hidden p-2 rounded-lg text-[#6D685C] hover:text-[#292820] hover:bg-[#EAE1D3] focus:outline-hidden"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5 text-[#292820]" />}
             </button>
           </div>
         </div>
@@ -232,22 +235,23 @@ export default function Navbar() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-[#0d1612] border-b border-[#1b2b22] px-4 pt-2 pb-4 space-y-1">
+        <div className="lg:hidden bg-[#FFFDF8] border-b-2 border-[#D6CCBC] px-4 pt-2 pb-4 space-y-1">
           {navLinks.map((link) => {
-            const Icon = link.icon;
-            const isActive = pathname === link.href;
+            const isActive =
+              link.href === '/'
+                ? pathname === '/'
+                : pathname.startsWith(link.href);
             return (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium ${
+                className={`flex items-center justify-between px-3 py-2 rounded-md text-xs font-semibold ${
                   isActive
-                    ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/50'
-                    : 'text-zinc-300 hover:bg-[#16271e]'
+                    ? 'bg-[#EAE1D3] text-[#292820] font-bold border border-[#D6CCBC]'
+                    : 'text-[#6D685C] hover:bg-[#F5F0E7]'
                 }`}
               >
-                <Icon className={`w-5 h-5 ${link.highlight ? 'text-amber-400' : 'text-zinc-400'}`} />
                 <span>{link.label}</span>
               </Link>
             );
@@ -257,15 +261,15 @@ export default function Navbar() {
             <Link
               href="/admin"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-purple-300 bg-purple-950/40 border border-purple-800/50"
+              className="flex items-center gap-2 px-3 py-2 rounded-md text-xs font-bold text-[#B85F43] bg-[#EAE1D3] border border-[#B85F43]/40"
             >
-              <ShieldCheck className="w-5 h-5 text-purple-400" />
+              <ShieldCheck className="w-4 h-4 text-[#B85F43]" />
               <span>Admin Review Panel</span>
             </Link>
           )}
 
-          <div className="pt-3 border-t border-[#1b2f24] flex items-center justify-between">
-            <span className="text-xs text-zinc-400">Evaluator Role:</span>
+          <div className="pt-3 border-t border-[#D6CCBC] flex items-center justify-between">
+            <span className="text-xs text-[#6D685C]">Evaluator Role:</span>
             <div className="flex gap-1">
               <button
                 type="button"
@@ -274,7 +278,9 @@ export default function Navbar() {
                   setMobileMenuOpen(false);
                 }}
                 className={`px-3 py-1 text-xs rounded-md ${
-                  role === 'traveler' ? 'bg-emerald-600 text-white' : 'bg-[#15241c] text-zinc-400'
+                  role === 'traveler'
+                    ? 'bg-[#777A53] text-white'
+                    : 'bg-[#EAE1D3] text-[#6D685C]'
                 }`}
               >
                 Traveler
@@ -286,7 +292,9 @@ export default function Navbar() {
                   setMobileMenuOpen(false);
                 }}
                 className={`px-3 py-1 text-xs rounded-md ${
-                  role === 'admin' ? 'bg-purple-600 text-white' : 'bg-[#15241c] text-zinc-400'
+                  role === 'admin'
+                    ? 'bg-[#B85F43] text-white'
+                    : 'bg-[#EAE1D3] text-[#6D685C]'
                 }`}
               >
                 Admin

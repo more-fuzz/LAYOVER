@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { SAMPLE_ACTIVITIES } from '@/data/sampleData';
+import SafeImage from '@/components/SafeImage';
 import {
   UploadCloud,
   CheckCircle2,
@@ -15,6 +16,7 @@ import {
   Sparkles,
   ShieldCheck,
   FileText,
+  Lock,
 } from 'lucide-react';
 
 function SubmissionForm() {
@@ -29,13 +31,15 @@ function SubmissionForm() {
   const [filePreview, setFilePreview] = useState<string | null>(null);
   const [claimedLat, setClaimedLat] = useState<string>('');
   const [claimedLng, setClaimedLng] = useState<string>('');
+  const [notes, setNotes] = useState<string>('');
   const [isLocating, setIsLocating] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState('');
   const [successResult, setSuccessResult] = useState<{ id: string; status: string } | null>(null);
 
-  const selectedActivity = SAMPLE_ACTIVITIES.find((a) => a.id === activityId) || SAMPLE_ACTIVITIES[0];
+  const selectedActivity =
+    SAMPLE_ACTIVITIES.find((a) => a.id === activityId) || SAMPLE_ACTIVITIES[0];
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -82,10 +86,9 @@ function SubmissionForm() {
 
     setUploading(true);
     setErrorMsg('');
-    setUploadProgress(20);
+    setUploadProgress(30);
 
     try {
-      // Simulate progress
       const progressTimer = setInterval(() => {
         setUploadProgress((prev) => (prev < 90 ? prev + 25 : prev));
       }, 200);
@@ -100,6 +103,7 @@ function SubmissionForm() {
           evidence_path: filePreview || evidencePath,
           claimed_latitude: claimedLat ? parseFloat(claimedLat) : selectedActivity.latitude,
           claimed_longitude: claimedLng ? parseFloat(claimedLng) : selectedActivity.longitude,
+          notes,
           user_id: profile.id,
           user_display_name: profile.display_name,
         }),
@@ -122,215 +126,191 @@ function SubmissionForm() {
     }
   };
 
+  if (successResult) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-16 text-center space-y-6">
+        <div className="p-8 rounded-2xl bg-[#FFFDF8] border-2 border-[#D6CCBC] shadow-xs space-y-4">
+          <div className="w-14 h-14 rounded-full bg-[#EAE1D3] border border-[#777A53] flex items-center justify-center text-[#777A53] mx-auto">
+            <CheckCircle2 className="w-8 h-8" />
+          </div>
+          <h2 className="text-2xl font-bold text-[#292820] font-sans">
+            Field Evidence Dispatched!
+          </h2>
+          <p className="text-xs text-[#6D685C] leading-relaxed">
+            Your verification dossier has been placed in encrypted private storage. A certified
+            reviewer will inspect the GPS coordinates and photo authenticity before awarding points.
+          </p>
+
+          <div className="p-3 bg-[#F5F0E7] rounded-xl border border-[#D6CCBC] text-xs font-mono text-[#777A53] space-y-1">
+            <div>REF ID: {successResult.id}</div>
+            <div>STATUS: {successResult.status.toUpperCase()}</div>
+          </div>
+
+          <div className="pt-2 flex flex-col sm:flex-row justify-center gap-3">
+            <Link href="/dashboard" className="btn-journal-primary text-xs py-2 px-4">
+              Return to Dashboard
+            </Link>
+            <Link href="/arena" className="btn-journal-secondary text-xs py-2 px-4">
+              View Arena Points
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-8">
-      {/* Back button */}
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full space-y-6">
       <div>
         <Link
           href="/dashboard"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 hover:text-emerald-300"
+          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6D685C] hover:text-[#292820] transition-colors"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="w-3.5 h-3.5" />
           <span>Back to Dashboard</span>
         </Link>
       </div>
 
-      <div className="bg-[#101b15] border border-[#1e3427] p-8 rounded-3xl shadow-2xl space-y-6">
-        <div>
-          <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950 px-2.5 py-1 rounded-full border border-emerald-800 mb-2">
-            <ShieldCheck className="w-4 h-4" />
-            <span>Verifiable Evidence Registration</span>
+      <div className="bg-[#FFFDF8] border-2 border-[#D6CCBC] p-6 sm:p-10 rounded-2xl shadow-xs space-y-6">
+        <div className="border-b border-[#D6CCBC] pb-4">
+          <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-[#777A53] bg-[#EAE1D3] px-2.5 py-0.5 rounded border border-[#D6CCBC] mb-2">
+            <Lock className="w-3 h-3 text-[#B85F43]" />
+            <span>ENCRYPTED PRIVATE STORAGE DISPATCH</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-white">
-            Submit Proof of Adventure Completion
+          <h1 className="text-2xl sm:text-3xl font-bold text-[#292820] font-sans">
+            Submit Field Completion Evidence
           </h1>
-          <p className="text-xs sm:text-sm text-zinc-400 mt-1">
-            Upload summit or expedition photo proof with coordinates. Once verified by an administrator, achievement points will be credited to your ledger.
+          <p className="text-xs text-[#6D685C] mt-1 leading-relaxed">
+            Upload summit photography or trail waypoint evidence. Points are awarded solely through
+            server-side reviewer approval.
           </p>
         </div>
 
-        {successResult ? (
-          <div className="p-6 rounded-2xl bg-[#12241a] border border-emerald-600/70 text-center space-y-4">
-            <div className="w-16 h-16 rounded-full bg-emerald-900/60 border border-emerald-500 flex items-center justify-center text-emerald-400 mx-auto">
-              <CheckCircle2 className="w-8 h-8" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-white">
-                Evidence Submitted Successfully!
-              </h2>
-              <p className="text-xs text-zinc-300 mt-1 max-w-md mx-auto">
-                Submission reference: <span className="font-mono text-emerald-400">{successResult.id}</span>. Status is currently marked as <span className="font-bold uppercase text-amber-300">{successResult.status}</span> awaiting administrator review.
-              </p>
-            </div>
-            <div className="flex justify-center gap-3 pt-2">
-              <Link
-                href="/dashboard"
-                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white transition-colors"
-              >
-                Go to Dashboard
-              </Link>
-              <Link
-                href="/admin"
-                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-[#1b2b22] hover:bg-[#23382c] text-zinc-200 border border-[#2b4436] transition-colors"
-              >
-                View in Admin Review Panel
-              </Link>
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Target Activity Selection */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#6D685C] block">
+              1. Completed Expedition Discipline:
+            </label>
+            <select
+              value={activityId}
+              onChange={(e) => setActivityId(e.target.value)}
+              className="w-full text-xs p-3 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] font-sans focus:outline-hidden"
+            >
+              {SAMPLE_ACTIVITIES.map((act) => (
+                <option key={act.id} value={act.id}>
+                  {act.name} ({act.location_name}) — +{act.base_points} pts
+                </option>
+              ))}
+            </select>
           </div>
-        ) : (
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {errorMsg && (
-              <div className="p-4 rounded-xl bg-rose-950/80 border border-rose-800 text-rose-200 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0 text-rose-400" />
-                <span>{errorMsg}</span>
-              </div>
-            )}
 
-            {/* Select Activity */}
-            <div>
-              <label className="block text-xs font-bold text-zinc-300 mb-1.5">
-                Select Completed Adventure Activity
-              </label>
-              <select
-                value={activityId}
-                onChange={(e) => setActivityId(e.target.value)}
-                className="w-full px-4 py-3 rounded-xl bg-[#0b1410] border border-[#1d3326] text-white text-sm focus:outline-none focus:border-emerald-500"
-              >
-                {SAMPLE_ACTIVITIES.map((act) => (
-                  <option key={act.id} value={act.id}>
-                    {act.name} (+{act.base_points} pts • {act.category})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Selected Activity Preview Card */}
-            <div className="p-4 rounded-2xl bg-[#0b1410] border border-[#1a2d21] flex items-center gap-4">
-              <img
-                src={selectedActivity.image_url}
-                alt={selectedActivity.name}
-                className="w-16 h-16 rounded-xl object-cover ring-1 ring-emerald-600/40"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="text-xs font-bold text-white truncate">
-                  {selectedActivity.name}
-                </div>
-                <div className="text-[11px] text-zinc-400">
-                  {selectedActivity.location_name} • Difficulty: {selectedActivity.difficulty}/5
-                </div>
-                <div className="text-xs font-bold text-emerald-400 mt-1">
-                  Available reward: +{selectedActivity.base_points} points
-                </div>
-              </div>
-            </div>
-
-            {/* Evidence File Upload Dropzone */}
-            <div>
-              <label className="block text-xs font-bold text-zinc-300 mb-1.5">
-                Photographic Proof of Completion (JPEG, PNG, WebP)
-              </label>
-
-              <div className="relative border-2 border-dashed border-[#1f382a] hover:border-emerald-500/60 rounded-2xl p-6 text-center bg-[#09120d] transition-colors">
-                <input
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  onChange={handleFileChange}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-
-                {filePreview ? (
-                  <div className="space-y-3">
-                    <img
-                      src={filePreview}
-                      alt="Preview"
-                      className="max-h-56 mx-auto rounded-xl object-cover shadow-lg"
-                    />
-                    <div className="text-xs text-emerald-400 font-semibold">
-                      Photo ready for upload ({file?.name || 'photo.jpg'})
-                    </div>
-                    <div className="text-[11px] text-zinc-500">
-                      Click or drag a new image to replace
-                    </div>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="w-12 h-12 rounded-2xl bg-emerald-950 border border-emerald-700/60 flex items-center justify-center text-emerald-400 mx-auto">
-                      <UploadCloud className="w-6 h-6" />
-                    </div>
-                    <div className="text-sm font-bold text-white">
-                      Drag and drop evidence photo, or browse
-                    </div>
-                    <p className="text-xs text-zinc-500">
-                      Private storage bucket upload • Maximum file size 10MB
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Claimed GPS Coordinates */}
-            <div>
-              <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-bold text-zinc-300">
-                  Claimed GPS Coordinates (Optional)
-                </label>
-                <button
-                  type="button"
-                  onClick={handleUseGPS}
-                  disabled={isLocating}
-                  className="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
-                >
-                  <Locate className={`w-3.5 h-3.5 ${isLocating ? 'animate-spin' : ''}`} />
-                  <span>{isLocating ? 'Locating...' : 'Use My Current Location'}</span>
-                </button>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="number"
-                  step="any"
-                  value={claimedLat}
-                  onChange={(e) => setClaimedLat(e.target.value)}
-                  placeholder={`Latitude (e.g. ${selectedActivity.latitude.toFixed(4)})`}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b1410] border border-[#1d3326] text-white text-xs focus:outline-none focus:border-emerald-500"
-                />
-                <input
-                  type="number"
-                  step="any"
-                  value={claimedLng}
-                  onChange={(e) => setClaimedLng(e.target.value)}
-                  placeholder={`Longitude (e.g. ${selectedActivity.longitude.toFixed(4)})`}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b1410] border border-[#1d3326] text-white text-xs focus:outline-none focus:border-emerald-500"
-                />
-              </div>
-            </div>
-
-            {/* Upload Progress Bar */}
-            {uploading && (
-              <div className="space-y-1.5">
-                <div className="flex justify-between text-xs text-emerald-300 font-semibold">
-                  <span>Encrypting & Registering Evidence...</span>
-                  <span>{uploadProgress}%</span>
-                </div>
-                <div className="w-full bg-[#0b1410] h-2 rounded-full overflow-hidden">
-                  <div
-                    className="bg-emerald-500 h-full transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
+          {/* Photo Upload Area */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#6D685C] block">
+              2. Upload Summit / Waypoint Proof:
+            </label>
+            <div className="border-2 border-dashed border-[#D6CCBC] bg-[#F5F0E7] rounded-xl p-6 text-center space-y-3">
+              {filePreview ? (
+                <div className="max-w-xs mx-auto rounded-lg overflow-hidden border border-[#D6CCBC]">
+                  <SafeImage
+                    src={filePreview}
+                    alt="Preview"
+                    aspectRatio="16/9"
+                    fallbackTitle="Selected Evidence"
                   />
                 </div>
-              </div>
-            )}
+              ) : (
+                <UploadCloud className="w-10 h-10 text-[#777A53] mx-auto opacity-60" />
+              )}
 
-            {/* Submit Button */}
-            <button
-              type="submit"
-              disabled={uploading}
-              className="w-full py-3.5 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-xl shadow-emerald-950/60 transition-all disabled:opacity-50"
-            >
-              {uploading ? 'Verifying Upload...' : 'Submit Evidence for Verification'}
-            </button>
-          </form>
-        )}
+              <div>
+                <input
+                  type="file"
+                  id="evidence-file"
+                  accept="image/png, image/jpeg, image/webp"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+                <label
+                  htmlFor="evidence-file"
+                  className="btn-journal-secondary text-xs inline-block cursor-pointer py-2 px-4"
+                >
+                  {file ? 'Change Photo File' : 'Select Photo from Device'}
+                </label>
+              </div>
+
+              <p className="text-[10px] text-[#8E8675] font-mono">
+                JPEG, PNG, WebP up to 10MB. Stored in private bucket accessible only to reviewers.
+              </p>
+            </div>
+          </div>
+
+          {/* GPS Location Coordinates */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#6D685C]">
+                3. Trailhead Coordinates (Optional / Geotag):
+              </label>
+              <button
+                type="button"
+                onClick={handleUseGPS}
+                disabled={isLocating}
+                className="text-[11px] font-mono font-bold text-[#777A53] hover:underline flex items-center gap-1"
+              >
+                <Locate className="w-3 h-3" />
+                <span>{isLocating ? 'Calibrating...' : 'Use Current Device GPS'}</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                placeholder={`Lat (e.g. ${selectedActivity.latitude})`}
+                value={claimedLat}
+                onChange={(e) => setClaimedLat(e.target.value)}
+                className="w-full text-xs p-2.5 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] font-mono"
+              />
+              <input
+                type="text"
+                placeholder={`Lng (e.g. ${selectedActivity.longitude})`}
+                value={claimedLng}
+                onChange={(e) => setClaimedLng(e.target.value)}
+                className="w-full text-xs p-2.5 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] font-mono"
+              />
+            </div>
+          </div>
+
+          {/* Expedition Notes */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-mono font-bold uppercase tracking-wider text-[#6D685C] block">
+              4. Field Journal Log / Route Details:
+            </label>
+            <textarea
+              rows={3}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="e.g. Reached Roopkund glacial ridge at 14:00. Cleared trail markers and confirmed Leave-No-Trace etiquette..."
+              className="w-full text-xs p-3 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] focus:outline-hidden"
+            />
+          </div>
+
+          {errorMsg && (
+            <div className="p-3 rounded-lg bg-[#FFFDF8] border border-[#B85F43] text-[#B85F43] text-xs flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={uploading}
+            className="btn-journal-terracotta w-full py-3 text-xs font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+          >
+            <UploadCloud className="w-4 h-4" />
+            <span>{uploading ? `Encrypting & Uploading (${uploadProgress}%)...` : 'Submit Dossier for Review'}</span>
+          </button>
+        </form>
       </div>
     </div>
   );
@@ -338,7 +318,13 @@ function SubmissionForm() {
 
 export default function NewSubmissionPage() {
   return (
-    <Suspense fallback={<div className="p-10 text-center text-zinc-400">Loading submission form...</div>}>
+    <Suspense
+      fallback={
+        <div className="max-w-3xl mx-auto px-4 py-20 text-center text-[#6D685C]">
+          Loading field submission form...
+        </div>
+      }
+    >
       <SubmissionForm />
     </Suspense>
   );

@@ -42,67 +42,67 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-[#101b15] p-8 rounded-3xl border border-[#1f3529] shadow-2xl">
+      <div className="max-w-md w-full space-y-6 bg-[#FFFDF8] p-8 rounded-2xl border-2 border-[#D6CCBC] shadow-sm">
         {/* Brand Header */}
         <div className="text-center">
-          <div className="inline-flex w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 items-center justify-center shadow-lg shadow-emerald-950/50 mb-3">
-            <Compass className="w-6 h-6 text-white" />
+          <div className="inline-flex w-12 h-12 rounded-xl bg-[#EAE1D3] border border-[#D6CCBC] items-center justify-center mb-3">
+            <Compass className="w-6 h-6 text-[#777A53]" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-white">
-            Welcome Back, Adventurer
-          </h2>
-          <p className="mt-2 text-xs text-zinc-400">
-            Sign in to access your adventure memoir and verified points
+          <h1 className="text-2xl font-bold text-[#292820] font-sans">
+            Explorer Authentication
+          </h1>
+          <p className="mt-1 text-xs text-[#6D685C]">
+            Sign in to access your adventure memoir, point ledger, and field vouchers.
           </p>
         </div>
 
-        {/* Quick Demo One-Click Access for Judges & Evaluators */}
-        <div className="p-4 rounded-2xl bg-[#14231b] border border-[#223d2e] space-y-2.5">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
-            <Sparkles className="w-4 h-4" />
-            <span>Instant Demo Evaluation Access</span>
+        {/* Quick Demo One-Click Access for Evaluators */}
+        <div className="p-4 rounded-xl bg-[#F5F0E7] border border-[#D6CCBC] space-y-2">
+          <div className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#777A53] uppercase">
+            <Sparkles className="w-3.5 h-3.5 text-[#B85F43]" />
+            <span>Instant Evaluator Mode Access</span>
           </div>
-          <p className="text-[11px] text-zinc-400">
-            Click below to instantly explore as a Traveler or evaluate as an Administrator without waiting for email confirmations:
+          <p className="text-[11px] text-[#6D685C] leading-snug">
+            Evaluate as a verified traveler or simulate reviewer admin privileges directly:
           </p>
           <div className="grid grid-cols-2 gap-2 pt-1">
             <button
               type="button"
               onClick={handleDemoTraveler}
-              className="px-3 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white shadow transition-colors flex items-center justify-center gap-1.5"
+              className="btn-journal-primary text-xs py-2 flex items-center justify-center gap-1.5"
             >
               <User className="w-3.5 h-3.5" />
-              <span>Traveler Demo</span>
+              <span>Traveler Persona</span>
             </button>
             <button
               type="button"
               onClick={handleDemoAdmin}
-              className="px-3 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white shadow transition-colors flex items-center justify-center gap-1.5"
+              className="btn-journal-terracotta text-xs py-2 flex items-center justify-center gap-1.5"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Admin Demo</span>
+              <span>Admin Persona</span>
             </button>
           </div>
         </div>
 
         {/* Divider */}
         <div className="relative flex items-center justify-center">
-          <div className="border-t border-[#1b2f24] w-full" />
-          <span className="bg-[#101b15] px-3 text-[11px] font-semibold text-zinc-500 uppercase tracking-wider">
-            Or Supabase Account
+          <div className="border-t border-[#D6CCBC] w-full" />
+          <span className="bg-[#FFFDF8] px-3 text-[10px] font-mono uppercase text-[#8E8675] tracking-wider">
+            Or Supabase Credentials
           </span>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {errorMsg && (
-            <div className="p-3 rounded-xl bg-rose-950/70 border border-rose-800 text-rose-200 text-xs">
+            <div className="p-3 rounded-lg bg-[#FFFDF8] border border-[#B85F43] text-[#B85F43] text-xs">
               {errorMsg}
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-medium text-zinc-300 mb-1">
+            <label className="block text-xs font-mono font-bold uppercase text-[#6D685C] mb-1">
               Email Address
             </label>
             <input
@@ -111,12 +111,12 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="alex@traveler.com"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b1410] border border-[#1d3326] text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full px-3.5 py-2 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] text-xs focus:outline-hidden focus:border-[#777A53]"
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-zinc-300 mb-1">
+            <label className="block text-xs font-mono font-bold uppercase text-[#6D685C] mb-1">
               Password
             </label>
             <input
@@ -125,23 +125,23 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
-              className="w-full px-3.5 py-2.5 rounded-xl bg-[#0b1410] border border-[#1d3326] text-white text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full px-3.5 py-2 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] text-xs focus:outline-hidden focus:border-[#777A53]"
             />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl font-bold text-sm bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shadow-lg shadow-emerald-950/60 transition-all disabled:opacity-50"
+            className="btn-journal-primary w-full py-2.5 text-xs font-bold disabled:opacity-50"
           >
-            {loading ? 'Signing in...' : 'Sign In with Supabase'}
+            {loading ? 'Authenticating...' : 'Sign In with Supabase'}
           </button>
         </form>
 
-        <div className="text-center text-xs text-zinc-400">
+        <div className="text-center text-xs text-[#6D685C]">
           Don&apos;t have an account yet?{' '}
-          <Link href="/auth/register" className="font-bold text-emerald-400 hover:text-emerald-300">
-            Create an Account &rarr;
+          <Link href="/auth/register" className="font-bold text-[#777A53] hover:underline">
+            Register New Explorer &rarr;
           </Link>
         </div>
       </div>
