@@ -5,20 +5,7 @@ import Link from 'next/link';
 import 'leaflet/dist/leaflet.css';
 import { ActivityItem, DestinationItem } from '@/data/sampleData';
 import { calculateRouteOSRM, RouteResult } from '@/services/osrm';
-import {
-  Compass,
-  MapPin,
-  Ghost,
-  Mountain,
-  Navigation,
-  Locate,
-  X,
-  AlertCircle,
-  Clock,
-  Milestone,
-  ArrowRight,
-  Sparkles,
-} from 'lucide-react';
+import { Icon } from '@/components/ui/Icon';
 
 interface MapComponentProps {
   activities?: ActivityItem[];
@@ -30,27 +17,29 @@ interface MapComponentProps {
   onSelectMarker?: (item: ActivityItem | DestinationItem, type: 'activity' | 'destination') => void;
   showFilters?: boolean;
   enableRouting?: boolean;
+  isAfterDark?: boolean;
 }
 
 const PRESET_ORIGINS: { label: string; coords: [number, number] }[] = [
-  { label: 'Dehradun Hub (Uttarakhand)', coords: [30.3165, 78.0322] },
+  { label: 'Dehradun Hub', coords: [30.3165, 78.0322] },
   { label: 'New Delhi HQ', coords: [28.6139, 77.209] },
-  { label: 'Bengaluru Southern Base', coords: [12.9716, 77.5946] },
+  { label: 'Bengaluru Base', coords: [12.9716, 77.5946] },
   { label: 'Manali Trailhead', coords: [32.2396, 77.1887] },
   { label: 'Jaipur Gateway', coords: [26.9124, 75.7873] },
-  { label: 'Zurich Central (Europe)', coords: [47.3769, 8.5417] },
+  { label: 'Zurich Central', coords: [47.3769, 8.5417] },
 ];
 
 export default function MapComponent({
   activities = [],
   destinations = [],
-  center = [28.5, 78.5], // Centered around North India by default
+  center = [28.5, 78.5],
   zoom = 5,
   height = '580px',
   selectedId,
   onSelectMarker,
-  showFilters = true,
+  showFilters = false,
   enableRouting = true,
+  isAfterDark = false,
 }: MapComponentProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -73,6 +62,7 @@ export default function MapComponent({
   const [routingLoading, setRoutingLoading] = useState(false);
   const [routingPanelOpen, setRoutingPanelOpen] = useState(false);
 
+  // Initialize Leaflet Map
   useEffect(() => {
     let isMounted = true;
 
@@ -80,7 +70,6 @@ export default function MapComponent({
       if (!mapContainerRef.current) return;
       const L = (await import('leaflet')).default;
 
-      // Fix Leaflet marker icon asset paths
       delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
@@ -89,17 +78,14 @@ export default function MapComponent({
       });
 
       if (!mapInstanceRef.current && isMounted) {
-        // Initialize Map
         const map = L.map(mapContainerRef.current, {
           center,
           zoom,
           zoomControl: false,
         });
 
-        // Add standard OpenStreetMap tiles with verified attribution
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors',
+          attribution: '&copy; OpenStreetMap contributors',
           maxZoom: 19,
         }).addTo(map);
 
@@ -129,28 +115,26 @@ export default function MapComponent({
     };
   }, []);
 
-  // Update markers when filters or items change
+  // Re-render markers when props or selection change
   useEffect(() => {
     if (mapInstanceRef.current) {
       import('leaflet').then((module) => {
         renderMarkers(module.default);
       });
     }
-  }, [activities, destinations, activeFilter, selectedId]);
+  }, [activities, destinations, activeFilter, selectedId, isAfterDark]);
 
-  // Set destination if selectedId changes from external click
+  // Sync selectedId with destination
   useEffect(() => {
     if (selectedId) {
       const act = activities.find((a) => a.id === selectedId);
       if (act) {
         setSelectedDestination(act);
-        setRoutingPanelOpen(true);
         return;
       }
       const dest = destinations.find((d) => d.id === selectedId);
       if (dest) {
         setSelectedDestination(dest);
-        setRoutingPanelOpen(true);
       }
     }
   }, [selectedId, activities, destinations]);
@@ -160,8 +144,10 @@ export default function MapComponent({
     markersLayerRef.current.clearLayers();
 
     const bounds: [number, number][] = [];
+    const pinColor = isAfterDark ? '#D8F23C' : '#FF5A1F';
+    const pinTextColor = '#0F1F1A';
 
-    // 1. Activities (Muted Olive & Badge Marker)
+    // 1. Activities Markers
     if (activeFilter === 'all' || activeFilter === 'activities') {
       activities.forEach((act) => {
         if (!act.latitude || !act.longitude) return;
@@ -169,58 +155,60 @@ export default function MapComponent({
         bounds.push([act.latitude, act.longitude]);
 
         const customIcon = L.divIcon({
-          className: 'retro-leaflet-marker',
+          className: 'field-map-pin',
           html: `
-            <div style="
-              width: 32px;
-              height: 32px;
-              border-radius: 8px;
-              background: #777A53;
-              color: #FFFDF8;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              box-shadow: 0 2px 6px rgba(41, 40, 32, 0.35);
-              border: ${isSelected ? '3px solid #B85F43' : '2px solid #FFFDF8'};
-              cursor: pointer;
-              transform: ${isSelected ? 'scale(1.2)' : 'scale(1)'};
-              transition: transform 0.2s ease;
-            ">
-              <span style="font-size: 14px;">🏔️</span>
-            </div>
+            <button
+              type="button"
+              aria-label="${act.name}"
+              style="
+                width: 44px;
+                height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                position: relative;
+              "
+            >
+              ${
+                isSelected
+                  ? `<span style="
+                      position: absolute;
+                      width: 32px;
+                      height: 32px;
+                      border-radius: 50%;
+                      background: ${pinColor};
+                      opacity: 0.4;
+                      animation: ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+                    "></span>`
+                  : ''
+              }
+              <span style="
+                width: ${isSelected ? '26px' : '20px'};
+                height: ${isSelected ? '26px' : '20px'};
+                border-radius: 50%;
+                background: ${pinColor};
+                color: ${pinTextColor};
+                border: 2px solid #0F1F1A;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 8px rgba(15, 31, 26, 0.35);
+                transform: ${isSelected ? 'scale(1.25)' : 'scale(1)'};
+                transition: transform 0.2s cubic-bezier(.2,.8,.2,1);
+              ">
+                <span style="width: 6px; height: 6px; border-radius: 50%; background: #0F1F1A;"></span>
+              </span>
+            </button>
           `,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
-          popupAnchor: [0, -18],
+          iconSize: [44, 44],
+          iconAnchor: [22, 22],
+          popupAnchor: [0, -22],
         });
 
-        const popupHtml = `
-          <div style="font-family: inherit; min-width: 220px; color: #292820; padding: 2px;">
-            <div style="width: 100%; height: 95px; overflow: hidden; border-radius: 6px; margin-bottom: 8px; background: #EAE1D3; border: 1px solid #D6CCBC;">
-              <img src="${act.image_url}" alt="${act.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'" />
-            </div>
-            <div style="font-size: 10px; font-family: monospace; font-weight: bold; text-transform: uppercase; color: #777A53; margin-bottom: 2px;">
-              ${act.category} • DIFF ${act.difficulty}/5
-            </div>
-            <div style="font-weight: 700; font-size: 13px; line-height: 1.25; margin-bottom: 4px; color: #292820;">
-              ${act.name}
-            </div>
-            <div style="font-size: 11px; color: #6D685C; margin-bottom: 8px;">
-              📍 ${act.location_name}
-            </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #D6CCBC; padding-top: 6px;">
-              <span style="font-size: 10px; font-family: monospace; font-weight: bold; color: #B85F43;">
-                +${act.base_points} PTS
-              </span>
-              <a href="/activities/${act.id}" style="font-size: 11px; font-weight: bold; color: #777A53; text-decoration: underline;">
-                Field Details &rarr;
-              </a>
-            </div>
-          </div>
-        `;
-
         const marker = L.marker([act.latitude, act.longitude], { icon: customIcon })
-          .bindPopup(popupHtml, { maxWidth: 260 })
           .addTo(markersLayerRef.current);
 
         marker.on('click', () => {
@@ -230,63 +218,69 @@ export default function MapComponent({
       });
     }
 
-    // 2. Destinations & Folklore (Terracotta & Dark Stamp Marker)
+    // 2. Destinations Markers (Folklore / Spooky)
     if (activeFilter === 'all' || activeFilter === 'destinations') {
       destinations.forEach((dest) => {
         if (!dest.latitude || !dest.longitude) return;
         const isSelected = selectedId === dest.id;
         bounds.push([dest.latitude, dest.longitude]);
+        const destColor = isAfterDark ? '#D8F23C' : '#B8390A';
 
         const customIcon = L.divIcon({
-          className: 'retro-leaflet-marker',
+          className: 'field-map-pin',
           html: `
-            <div style="
-              width: 32px;
-              height: 32px;
-              border-radius: 8px;
-              background: #B85F43;
-              color: #FFFDF8;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              box-shadow: 0 2px 6px rgba(41, 40, 32, 0.35);
-              border: ${isSelected ? '3px solid #777A53' : '2px solid #FFFDF8'};
-              cursor: pointer;
-              transform: ${isSelected ? 'scale(1.2)' : 'scale(1)'};
-              transition: transform 0.2s ease;
-            ">
-              <span style="font-size: 14px;">${dest.is_spooky ? '👻' : '🏛️'}</span>
-            </div>
+            <button
+              type="button"
+              aria-label="${dest.name}"
+              style="
+                width: 44px;
+                height: 44px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: transparent;
+                border: none;
+                cursor: pointer;
+                position: relative;
+              "
+            >
+              ${
+                isSelected
+                  ? `<span style="
+                      position: absolute;
+                      width: 32px;
+                      height: 32px;
+                      border-radius: 50%;
+                      background: ${destColor};
+                      opacity: 0.4;
+                      animation: ping 1.4s cubic-bezier(0, 0, 0.2, 1) infinite;
+                    "></span>`
+                  : ''
+              }
+              <span style="
+                width: ${isSelected ? '26px' : '20px'};
+                height: ${isSelected ? '26px' : '20px'};
+                border-radius: 6px;
+                background: ${destColor};
+                color: #0F1F1A;
+                border: 2px solid #0F1F1A;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 2px 8px rgba(15, 31, 26, 0.35);
+                transform: ${isSelected ? 'scale(1.25)' : 'scale(1)'};
+                transition: transform 0.2s cubic-bezier(.2,.8,.2,1);
+              ">
+                <span style="width: 5px; height: 5px; border-radius: 1px; background: #0F1F1A;"></span>
+              </span>
+            </button>
           `,
-          iconSize: [32, 32],
-          iconAnchor: [16, 16],
-          popupAnchor: [0, -18],
+          iconSize: [44, 44],
+          iconAnchor: [22, 22],
+          popupAnchor: [0, -22],
         });
 
-        const popupHtml = `
-          <div style="font-family: inherit; min-width: 220px; color: #292820; padding: 2px;">
-            <div style="width: 100%; height: 95px; overflow: hidden; border-radius: 6px; margin-bottom: 8px; background: #EAE1D3; border: 1px solid #D6CCBC;">
-              <img src="${dest.image_url}" alt="${dest.name}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.style.display='none'" />
-            </div>
-            <div style="font-size: 10px; font-family: monospace; font-weight: bold; text-transform: uppercase; color: #B85F43; margin-bottom: 2px;">
-              ${dest.category.replace('_', ' ')} ${dest.is_spooky ? '• FOLKLORE' : ''}
-            </div>
-            <div style="font-weight: 700; font-size: 13px; line-height: 1.25; margin-bottom: 4px; color: #292820;">
-              ${dest.name}
-            </div>
-            <div style="font-size: 11px; color: #6D685C; margin-bottom: 6px;">
-              📍 ${dest.location_name}
-            </div>
-            <div style="display: flex; justify-content: flex-end; border-top: 1px solid #D6CCBC; padding-top: 6px;">
-              <a href="/brave-enough#${dest.id}" style="font-size: 11px; font-weight: bold; color: #B85F43; text-decoration: underline;">
-                Field Record &rarr;
-              </a>
-            </div>
-          </div>
-        `;
-
         const marker = L.marker([dest.latitude, dest.longitude], { icon: customIcon })
-          .bindPopup(popupHtml, { maxWidth: 260 })
           .addTo(markersLayerRef.current);
 
         marker.on('click', () => {
@@ -298,61 +292,22 @@ export default function MapComponent({
 
     if (bounds.length > 0 && !selectedId) {
       mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
-    }
-  };
-
-  // Explicit user-driven Geolocation
-  const handleLocateMe = () => {
-    if (!navigator.geolocation) {
-      alert('Geolocation is not supported by your current browser.');
-      return;
-    }
-    setGeoLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        setGeoLocating(false);
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        setUserCoords([lat, lng]);
-        setSelectedOriginCoords([lat, lng]);
-        setOriginLabel('My Verified Location');
-
-        if (mapInstanceRef.current) {
-          const L = (await import('leaflet')).default;
-          mapInstanceRef.current.setView([lat, lng], 10);
-
-          const userIcon = L.divIcon({
-            html: `
-              <div style="
-                width: 22px;
-                height: 22px;
-                border-radius: 50%;
-                background: #B85F43;
-                border: 3px solid #FFFDF8;
-                box-shadow: 0 0 10px rgba(184, 95, 67, 0.7);
-              "></div>
-            `,
-            iconSize: [22, 22],
-            iconAnchor: [11, 11],
-          });
-
-          L.marker([lat, lng], { icon: userIcon })
-            .bindPopup('<b>Explorer Position</b><br>Coordinates calibrated.')
-            .addTo(markersLayerRef.current)
-            .openPopup();
-        }
-      },
-      (err) => {
-        setGeoLocating(false);
-        alert(`Location permission denied or unavailable: ${err.message}`);
+    } else if (selectedId) {
+      const selectedItem =
+        activities.find((a) => a.id === selectedId) ||
+        destinations.find((d) => d.id === selectedId);
+      if (selectedItem?.latitude && selectedItem?.longitude) {
+        mapInstanceRef.current.panTo([selectedItem.latitude, selectedItem.longitude], {
+          animate: true,
+          duration: 0.5,
+        });
       }
-    );
+    }
   };
 
-  // OSRM Route Calculation Execution
+  // Route calculation
   const handleCalculateRoute = async () => {
     if (!selectedDestination || !selectedDestination.latitude || !selectedDestination.longitude) {
-      alert('Please select a destination activity or marker on the map first.');
       return;
     }
 
@@ -373,9 +328,8 @@ export default function MapComponent({
       const L = (await import('leaflet')).default;
       routeLayerRef.current.clearLayers();
 
-      // Render terracotta dashed expedition route polyline
       const polyline = L.polyline(result.coordinates, {
-        color: '#B85F43',
+        color: '#FF5A1F',
         weight: 4,
         opacity: 0.9,
         dashArray: '6, 6',
@@ -393,223 +347,78 @@ export default function MapComponent({
   };
 
   return (
-    <div className="relative w-full rounded-2xl overflow-hidden border-2 border-[#D6CCBC] bg-[#FFFDF8] shadow-sm">
-      {/* Top Filter Bar */}
-      {showFilters && (
-        <div className="absolute top-4 left-4 z-[400] flex flex-wrap items-center gap-1.5 bg-[#FFFDF8]/95 backdrop-blur-xs p-1 rounded-xl border border-[#D6CCBC] shadow-xs">
-          <button
-            type="button"
-            onClick={() => setActiveFilter('all')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors ${
-              activeFilter === 'all'
-                ? 'bg-[#777A53] text-white'
-                : 'text-[#6D685C] hover:text-[#292820] hover:bg-[#EAE1D3]'
-            }`}
-          >
-            All Waypoints ({activities.length + destinations.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFilter('activities')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors ${
-              activeFilter === 'activities'
-                ? 'bg-[#777A53] text-white'
-                : 'text-[#6D685C] hover:text-[#292820] hover:bg-[#EAE1D3]'
-            }`}
-          >
-            <span>🏔️</span>
-            <span>Adventures ({activities.length})</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveFilter('destinations')}
-            className={`px-3 py-1.5 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition-colors ${
-              activeFilter === 'destinations'
-                ? 'bg-[#B85F43] text-white'
-                : 'text-[#6D685C] hover:text-[#292820] hover:bg-[#EAE1D3]'
-            }`}
-          >
-            <span>👻</span>
-            <span>Folklore ({destinations.length})</span>
-          </button>
+    <div
+      className={`relative w-full rounded-[var(--radius-lg,22px)] overflow-hidden border-[1.5px] border-[var(--ink,#0F1F1A)] ${
+        isAfterDark ? 'map-after-dark' : ''
+      }`}
+      style={{ minHeight: height }}
+    >
+      {/* After Dark Indicator Banner */}
+      {isAfterDark && (
+        <div className="absolute top-4 left-4 z-[400] bg-[var(--ink,#0F1F1A)] text-[var(--citron,#D8F23C)] border border-[var(--citron,#D8F23C)] px-3 py-1 rounded-[var(--radius-sm,8px)] font-mono-label text-[11px] font-bold flex items-center gap-2 shadow-lg">
+          <span className="w-2 h-2 rounded-full bg-[var(--citron,#D8F23C)]" aria-hidden="true" />
+          <span>AFTER DARK MODE</span>
         </div>
       )}
 
-      {/* Top Right Controls: Route Drawer & Locate Me */}
-      <div className="absolute top-4 right-4 z-[400] flex items-center gap-2">
-        {enableRouting && (
-          <button
-            type="button"
-            onClick={() => setRoutingPanelOpen(!routingPanelOpen)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold shadow-xs border transition-colors ${
-              routingPanelOpen
-                ? 'bg-[#B85F43] text-white border-[#B85F43]'
-                : 'bg-[#FFFDF8]/95 text-[#292820] border-[#D6CCBC] hover:bg-[#EAE1D3]'
-            }`}
-          >
-            <Navigation className="w-3.5 h-3.5" />
-            <span>Route Planner</span>
-          </button>
-        )}
-
-        <button
-          type="button"
-          onClick={handleLocateMe}
-          disabled={geoLocating}
-          className="flex items-center gap-1.5 bg-[#FFFDF8]/95 hover:bg-[#EAE1D3] text-[#777A53] border border-[#D6CCBC] px-3 py-1.5 rounded-lg text-xs font-bold shadow-xs transition-colors disabled:opacity-50"
-          title="Detect my current location with browser permission"
-        >
-          <Locate className={`w-3.5 h-3.5 ${geoLocating ? 'animate-spin' : ''}`} />
-          <span>{geoLocating ? 'Finding location...' : 'My Location'}</span>
-        </button>
-      </div>
-
-      {/* Expedition Route Calculation Floating Drawer */}
-      {enableRouting && routingPanelOpen && (
-        <div className="absolute top-16 right-4 z-[450] w-80 sm:w-96 bg-[#FFFDF8] border-2 border-[#D6CCBC] rounded-xl shadow-lg p-4 space-y-3.5">
-          <div className="flex items-center justify-between border-b border-[#D6CCBC] pb-2">
-            <div className="flex items-center gap-2 text-xs font-mono font-bold text-[#777A53] uppercase">
-              <Compass className="w-4 h-4 text-[#B85F43]" />
-              <span>Expedition Route Planner</span>
-            </div>
-            <button
-              type="button"
-              onClick={() => setRoutingPanelOpen(false)}
-              className="text-[#6D685C] hover:text-[#292820] p-1"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          {/* Origin Selector */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-mono uppercase tracking-wider text-[#6D685C] block">
-              1. Expedition Departure Point:
-            </label>
-            <select
-              value={originLabel}
-              onChange={(e) => {
-                const found = PRESET_ORIGINS.find((p) => p.label === e.target.value);
-                if (found) {
-                  setSelectedOriginCoords(found.coords);
-                  setOriginLabel(found.label);
-                } else if (userCoords && e.target.value === 'My Verified Location') {
-                  setSelectedOriginCoords(userCoords);
-                  setOriginLabel('My Verified Location');
-                }
-              }}
-              className="w-full text-xs bg-[#F5F0E7] border border-[#D6CCBC] rounded-md px-2.5 py-1.5 text-[#292820] focus:outline-hidden"
-            >
-              {userCoords && <option value="My Verified Location">My Verified Location</option>}
-              {PRESET_ORIGINS.map((hub) => (
-                <option key={hub.label} value={hub.label}>
-                  {hub.label}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Destination Selector */}
-          <div className="space-y-1">
-            <label className="text-[11px] font-mono uppercase tracking-wider text-[#6D685C] block">
-              2. Target Trail / Destination:
-            </label>
-            {selectedDestination ? (
-              <div className="p-2 bg-[#F5F0E7] border border-[#D6CCBC] rounded-md flex items-center justify-between text-xs">
-                <div className="truncate font-semibold text-[#292820]">
-                  📍 {selectedDestination.name}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedDestination(null)}
-                  className="text-[10px] text-[#B85F43] font-mono underline ml-2 shrink-0"
-                >
-                  Change
-                </button>
-              </div>
-            ) : (
-              <select
-                onChange={(e) => {
-                  const act = activities.find((a) => a.id === e.target.value);
-                  if (act) setSelectedDestination(act);
-                  else {
-                    const dest = destinations.find((d) => d.id === e.target.value);
-                    if (dest) setSelectedDestination(dest);
-                  }
-                }}
-                defaultValue=""
-                className="w-full text-xs bg-[#F5F0E7] border border-[#D6CCBC] rounded-md px-2.5 py-1.5 text-[#292820] focus:outline-hidden"
-              >
-                <option value="" disabled>
-                  Click a map pin or select here...
-                </option>
-                <optgroup label="Adventures">
-                  {activities.map((a) => (
-                    <option key={a.id} value={a.id}>
-                      {a.name} ({a.location_name})
-                    </option>
-                  ))}
-                </optgroup>
-                <optgroup label="Folklore Dest.">
-                  {destinations.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name} ({d.location_name})
-                    </option>
-                  ))}
-                </optgroup>
-              </select>
-            )}
-          </div>
-
-          {/* Action Row */}
-          <div className="flex gap-2 pt-1">
-            <button
-              type="button"
-              onClick={handleCalculateRoute}
-              disabled={routingLoading || !selectedDestination}
-              className="btn-journal-terracotta flex-1 text-xs py-2 flex items-center justify-center gap-1.5 disabled:opacity-50"
-            >
-              <Navigation className="w-3.5 h-3.5" />
-              <span>{routingLoading ? 'Finding your route...' : 'Calculate Route'}</span>
-            </button>
-
+      {/* Route Direction Panel (Accessible overlay if routing active) */}
+      {enableRouting && selectedDestination && (
+        <div className="absolute top-4 right-4 z-[400] max-w-xs bg-[var(--card,#FFFAF0)] border border-[var(--line,#D8CBB0)] p-3 rounded-[var(--radius,14px)] shadow-lg text-xs space-y-2">
+          <div className="flex items-center justify-between font-mono-label text-[10px] text-[var(--muted,#5E675F)]">
+            <span>ROUTE PLANNER</span>
             {routeResult && (
               <button
                 type="button"
                 onClick={handleClearRoute}
-                className="btn-journal-secondary text-xs px-3 py-2"
-                title="Clear route polyline"
+                className="text-[var(--flame,#FF5A1F)] hover:underline"
               >
                 Clear
               </button>
             )}
           </div>
 
-          {/* Route Metrics Result Box */}
+          <div className="font-display font-bold text-[var(--ink,#0F1F1A)] truncate">
+            To: {selectedDestination.name}
+          </div>
+
+          <div className="flex items-center gap-2 pt-1">
+            <select
+              value={`${selectedOriginCoords[0]},${selectedOriginCoords[1]}`}
+              onChange={(e) => {
+                const [lat, lng] = e.target.value.split(',').map(Number);
+                setSelectedOriginCoords([lat, lng]);
+              }}
+              className="w-full bg-[var(--sand,#EADFC8)] border border-[var(--line,#D8CBB0)] rounded p-1 text-[11px] font-mono-label"
+              aria-label="Departure point"
+            >
+              {PRESET_ORIGINS.map((o) => (
+                <option key={o.label} value={`${o.coords[0]},${o.coords[1]}`}>
+                  From: {o.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleCalculateRoute}
+            disabled={routingLoading}
+            className="w-full btn-field btn-flame text-xs py-1.5 min-h-[38px] font-bold mt-1"
+          >
+            {routingLoading ? 'Calculating...' : 'Calculate Trail Route'}
+          </button>
+
+          {/* Route results */}
           {routeResult && (
-            <div className="mt-2 p-3 bg-[#EAE1D3]/60 border border-[#D6CCBC] rounded-lg space-y-1.5 text-xs">
+            <div className="pt-2 border-t border-[var(--line,#D8CBB0)] space-y-1">
               {routeResult.success ? (
-                <>
-                  <div className="flex items-center justify-between text-[#777A53] font-bold font-mono text-[11px]">
-                    <span className="flex items-center gap-1">
-                      <Milestone className="w-3.5 h-3.5 text-[#B85F43]" />
-                      <span>Distance: {routeResult.distanceKm} km</span>
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-[#777A53]" />
-                      <span>Travel: {routeResult.durationFormatted}</span>
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-[#6D685C] leading-snug">
-                    * Route computed via OpenStreetMap road network. High mountain trails may require trekking permits and pack transport.
-                  </p>
-                </>
+                <div className="font-mono-label text-[11px] text-[var(--ink,#0F1F1A)]">
+                  <div>Distance: <span className="font-bold tabular-nums">{routeResult.distanceKm} km</span></div>
+                  <div>Estimated time: <span className="font-bold tabular-nums">~{routeResult.durationFormatted || `${routeResult.durationMinutes} min`}</span></div>
+                </div>
               ) : (
-                <div className="text-[#B85F43] flex items-start gap-1.5">
-                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                  <span className="text-[11px] leading-tight">
-                    {routeResult.error || 'Navigable route calculation failed.'}
-                  </span>
+                <div className="text-[11px] text-[var(--folklore,#B8390A)]">
+                  {routeResult.error || 'Unable to chart route between selected points.'}
                 </div>
               )}
             </div>
@@ -617,8 +426,8 @@ export default function MapComponent({
         </div>
       )}
 
-      {/* Map Canvas */}
-      <div ref={mapContainerRef} style={{ height, width: '100%' }} className="bg-[#EAE1D3]" />
+      {/* Map DOM Element */}
+      <div ref={mapContainerRef} className="w-full h-full" style={{ minHeight: height }} />
     </div>
   );
 }
