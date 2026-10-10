@@ -2,210 +2,356 @@
 
 @layer base {
   :root {
-    --background: #F5F0E7;
-    --surface-secondary: #EAE1D3;
-    --card-background: #FFFDF8;
-    --primary-text: #292820;
-    --secondary-text: #6D685C;
-    --olive: #777A53;
-    --olive-light: #8E9168;
-    --olive-dark: #585A3B;
-    --terracotta: #B85F43;
-    --terracotta-light: #CC7357;
-    --terracotta-dark: #8F432B;
-    --mustard: #C6A45B;
-    --mustard-light: #D4B673;
-    --mustard-dark: #9E7F3B;
-    --border-color: #D6CCBC;
-    --border-dark: #BDB19C;
+    --ink: #0F1F1A;
+    --ink-2: #18302A;
+    --ink-line: #2D4C42;
+    --paper: #F6EFE2;
+    --sand: #EADFC8;
+    --card: #FFFAF0;
+    --line: #D8CBB0;
+    --text: #1A241F;
+    --muted: #5E675F;
+    --flame: #FF5A1F;
+    --citron: #D8F23C;
+    --jade: #14A06C;
+    --jade-deep: #0B7A50;
+    --gold: #F2C94C;
+    --folklore: #B8390A;
+    --radius-sm: 8px;
+    --radius: 14px;
+    --radius-lg: 22px;
+    --radius-xl: 32px;
+    --ease: cubic-bezier(.2, .8, .2, 1);
+    --ease-spring: cubic-bezier(.3, 1.5, .5, 1);
+
+    /* Backwards-compatibility aliases */
+    --background: var(--paper);
+    --surface-secondary: var(--sand);
+    --card-background: var(--card);
+    --primary-text: var(--text);
+    --secondary-text: var(--muted);
+    --border-color: var(--line);
+    --border-dark: var(--ink-line);
+    --olive: var(--jade-deep);
+    --olive-light: var(--jade);
+    --olive-dark: var(--ink-2);
+    --terracotta: var(--flame);
+    --mustard: var(--gold);
   }
 
   body {
-    background-color: var(--background);
-    color: var(--primary-text);
-    font-family: var(--font-public-sans), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--paper);
+    color: var(--text);
+    font-family: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     line-height: 1.5;
     -webkit-font-smoothing: antialiased;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    letter-spacing: -0.02em;
-    color: var(--primary-text);
+    font-family: var(--font-display), "Bricolage Grotesque", -apple-system, sans-serif;
+    letter-spacing: -0.03em;
+    color: var(--ink);
     font-weight: 700;
   }
+
+  /* Accessible visible focus across all focusable elements */
+  :focus-visible {
+    outline: 3px solid var(--flame) !important;
+    outline-offset: 3px !important;
+  }
+}
+
+/* Typography tokens & helpers */
+.font-display {
+  font-family: var(--font-display), "Bricolage Grotesque", sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.font-serif-accent {
+  font-family: var(--font-serif), "Instrument Serif", Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.font-body {
+  font-family: var(--font-body), "Public Sans", sans-serif;
+}
+
+.font-mono-label {
+  font-family: var(--font-mono), "DM Mono", ui-monospace, monospace;
+  text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
 
 .font-handwritten {
   font-family: var(--font-handwritten), "Caveat", cursive;
 }
 
-.font-mono {
-  font-family: var(--font-mono), "IBM Plex Mono", ui-monospace, monospace;
+/* Contrast mandates: text on flame and citron is always ink */
+.bg-flame, .btn-flame {
+  background-color: var(--flame);
+  color: var(--ink) !important;
 }
 
-/* Custom retro-journal utility tokens */
-.bg-journal-main { background-color: var(--background); }
-.bg-journal-secondary { background-color: var(--surface-secondary); }
-.bg-journal-card { background-color: var(--card-background); }
-.text-journal-primary { color: var(--primary-text); }
-.text-journal-muted { color: var(--secondary-text); }
-.text-journal-olive { color: var(--olive); }
-.text-journal-terracotta { color: var(--terracotta); }
-.text-journal-mustard { color: var(--mustard); }
-.border-journal { border-color: var(--border-color); }
-.border-journal-dark { border-color: var(--border-dark); }
+.bg-citron, .btn-citron {
+  background-color: var(--citron);
+  color: var(--ink) !important;
+}
 
-/* Retro Stamp badge */
-.retro-stamp {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+.text-verified {
+  color: var(--jade-deep);
+}
+
+.text-folklore {
+  color: var(--folklore);
+}
+
+/* Button system */
+.btn-field {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius);
+  font-family: var(--font-body), sans-serif;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease), background-color 0.2s var(--ease);
+}
+
+.btn-field:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 31, 26, 0.12);
+}
+
+.btn-field:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.btn-field:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.btn-flame {
+  background-color: var(--flame);
+  color: var(--ink) !important;
+  border: 1.5px solid var(--flame);
+}
+.btn-flame:hover:not(:disabled) {
+  background-color: #E64E17;
+  border-color: #E64E17;
+}
+
+.btn-ink {
+  background-color: var(--ink);
+  color: var(--card);
+  border: 1.5px solid var(--ink);
+}
+.btn-ink:hover:not(:disabled) {
+  background-color: var(--ink-2);
+  border-color: var(--ink-2);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--text);
+  border: 1.5px solid var(--line);
+}
+.btn-outline:hover:not(:disabled) {
+  background-color: var(--sand);
+  border-color: var(--ink-line);
+}
+
+.btn-citron {
+  background-color: var(--citron);
+  color: var(--ink) !important;
+  border: 1.5px solid var(--citron);
+}
+.btn-citron:hover:not(:disabled) {
+  background-color: #C7E228;
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text);
+  border: 1.5px solid transparent;
+}
+.btn-ghost:hover:not(:disabled) {
+  background-color: var(--sand);
+}
+
+/* Arrow animations */
+.btn-field:hover .btn-arrow {
+  transform: translateX(5px);
+}
+.btn-arrow {
+  transition: transform 0.2s var(--ease);
+}
+
+.btn-field:hover .btn-arrow-diag {
+  transform: translate(3px, -3px);
+}
+.btn-arrow-diag {
+  transition: transform 0.2s var(--ease);
+}
+
+/* Card system */
+.card-field {
+  background-color: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
+}
+
+.card-field:hover {
+  transform: translateY(-5px) rotate(-0.4deg);
+  box-shadow: 0 8px 24px rgba(15, 31, 26, 0.08);
+}
+
+.panel-ink {
+  background-color: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius-xl);
+}
+
+/* Page container */
+.field-container {
+  max-width: 1280px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+@media (min-width: 768px) {
+  .field-container {
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+}
+
+/* Chips */
+.chip-field {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius);
+  font-family: var(--font-mono), monospace;
+  font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  padding: 0.25rem 0.625rem;
-  border-radius: 2px;
+  font-weight: 500;
+  border: 1.5px solid var(--line);
+  background-color: var(--card);
+  color: var(--text);
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 0.375rem;
+  transition: transform 0.15s var(--ease), background-color 0.15s var(--ease), border-color 0.15s var(--ease);
+}
+.chip-field:hover {
+  transform: translateY(-2px);
+  border-color: var(--ink-line);
+}
+.chip-field:active {
+  transform: scale(0.94);
+}
+.chip-field.active {
+  background-color: var(--ink);
+  color: var(--citron);
+  border-color: var(--ink);
 }
 
-.retro-stamp-olive {
-  background-color: #ECEFE3;
-  color: #585A3B;
-  border: 1px solid #777A53;
+/* Live dot */
+@keyframes liveDotBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.2; }
+}
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background-color: var(--flame);
+  animation: liveDotBlink 1.4s infinite;
 }
 
-.retro-stamp-terracotta {
-  background-color: #F8ECE8;
-  color: #8F432B;
-  border: 1px solid #B85F43;
+/* Rise in */
+@keyframes riseIn {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-rise {
+  animation: riseIn 0.65s var(--ease) forwards;
 }
 
-.retro-stamp-mustard {
-  background-color: #FAF5E9;
-  color: #80652B;
-  border: 1px solid #C6A45B;
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .card-field:hover {
+    transform: none !important;
+  }
+  .btn-field:hover {
+    transform: none !important;
+  }
+  .chip-field:hover {
+    transform: none !important;
+  }
+  .page-rise {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .live-dot {
+    animation: none !important;
+    opacity: 1 !important;
+  }
 }
 
-.retro-stamp-charcoal {
-  background-color: #E6E1D6;
-  color: #292820;
-  border: 1px solid #BDB19C;
-}
-
-/* Journal button hierarchy */
-.btn-journal-primary {
-  background-color: #292820;
-  color: #FFFDF8;
-  font-family: var(--font-public-sans), sans-serif;
-  font-weight: 600;
-  font-size: 0.8125rem;
-  padding: 0.625rem 1.125rem;
-  border-radius: 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border: 1px solid #292820;
-  transition: all 0.15s ease-in-out;
-}
-.btn-journal-primary:hover {
-  background-color: #403E33;
-  border-color: #403E33;
-}
-
-.btn-journal-terracotta {
-  background-color: #B85F43;
-  color: #FFFDF8;
-  font-family: var(--font-public-sans), sans-serif;
-  font-weight: 600;
-  font-size: 0.8125rem;
-  padding: 0.625rem 1.125rem;
-  border-radius: 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border: 1px solid #B85F43;
-  transition: all 0.15s ease-in-out;
-}
-.btn-journal-terracotta:hover {
-  background-color: #9C4B31;
-  border-color: #9C4B31;
-}
-
-.btn-journal-secondary {
-  background-color: #FFFDF8;
-  color: #292820;
-  font-family: var(--font-public-sans), sans-serif;
-  font-weight: 600;
-  font-size: 0.8125rem;
-  padding: 0.625rem 1.125rem;
-  border-radius: 4px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  border: 1px solid #D6CCBC;
-  transition: all 0.15s ease-in-out;
-}
-.btn-journal-secondary:hover {
-  background-color: #EAE1D3;
-  border-color: #BDB19C;
-}
-
-/* Journal card container */
-.journal-card {
-  background-color: #FFFDF8;
-  border: 1px solid #D6CCBC;
-  border-radius: 4px;
-  box-shadow: 0 1px 3px rgba(41, 40, 32, 0.04);
-}
-
-/* Custom Leaflet Map styling to match warm-neutral vintage map feel */
+/* Leaflet Container customization */
 .leaflet-container {
-  background-color: #EAE1D3 !important;
-  font-family: var(--font-public-sans), sans-serif !important;
+  background-color: var(--sand) !important;
+  font-family: var(--font-body), sans-serif !important;
 }
 
 .leaflet-popup-content-wrapper {
-  background-color: #FFFDF8 !important;
-  border: 1px solid #D6CCBC !important;
-  border-radius: 4px !important;
-  box-shadow: 0 4px 12px rgba(41, 40, 32, 0.1) !important;
-  color: #292820 !important;
+  background-color: var(--card) !important;
+  border: 1px solid var(--line) !important;
+  border-radius: var(--radius) !important;
+  box-shadow: 0 4px 16px rgba(15, 31, 26, 0.12) !important;
+  color: var(--text) !important;
 }
 
 .leaflet-popup-tip {
-  background-color: #FFFDF8 !important;
-  border-color: #D6CCBC !important;
+  background-color: var(--card) !important;
+  border-color: var(--line) !important;
 }
 
-@keyframes spinSlow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-@keyframes reverseSpin {
-  from { transform: rotate(360deg); }
-  to { transform: rotate(0deg); }
-}
-
-@keyframes progressBar {
-  0% { width: 0%; }
-  60% { width: 75%; }
-  100% { width: 100%; }
-}
-
-.animate-spin-slow {
-  animation: spinSlow 12s linear infinite;
-}
-
-.animate-reverse-spin {
-  animation: reverseSpin 18s linear infinite;
-}
-
-.animate-progress {
-  animation: progressBar 1.4s ease-out forwards;
+.map-after-dark .leaflet-container {
+  background-color: var(--ink) !important;
+  filter: invert(95%) hue-rotate(180deg) brightness(88%) contrast(115%);
 }
