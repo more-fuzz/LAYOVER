@@ -240,7 +240,7 @@ export const SAMPLE_ACTIVITIES: ActivityItem[] = [
     is_published: true,
     location_name: 'Postojna, Notranjska, Slovenia',
     duration_hours: 6,
-    image_url: 'https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80',
+    image_url: 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80',
   },
 ];
 
@@ -349,7 +349,7 @@ export const SAMPLE_DESTINATIONS: DestinationItem[] = [
     is_spooky: false,
     spooky_rating: 1,
     location_name: 'Lika-Senj County, Croatia',
-    image_url: 'https://images.unsplash.com/photo-1528164344705-475426879c0d?auto=format&fit=crop&w=1200&q=80',
+    image_url: 'https://images.unsplash.com/photo-1584551246679-0daf3d275d0f?auto=format&fit=crop&w=1200&q=80',
   },
 ];
 

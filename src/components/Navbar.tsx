@@ -41,8 +41,12 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
           <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-9 h-9 rounded-lg bg-[#EAE1D3] border border-[#D6CCBC] flex items-center justify-center text-[#777A53] group-hover:border-[#777A53] transition-colors">
-              <Compass className="w-5 h-5 text-[#777A53]" />
+            <div className="w-9 h-9 rounded-full overflow-hidden border border-[#D6CCBC] flex items-center justify-center bg-[#FFFDF8] shrink-0 shadow-xs group-hover:border-[#B85F43] transition-colors">
+              <img
+                src="/logo.jpg"
+                alt="Trails & Tales Logo"
+                className="w-full h-full object-contain"
+              />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">

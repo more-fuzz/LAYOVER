@@ -448,7 +448,7 @@ export default function MapComponent({
             }`}
           >
             <Navigation className="w-3.5 h-3.5" />
-            <span>Route Planner (OSRM)</span>
+            <span>Route Planner</span>
           </button>
         )}
 
@@ -460,17 +460,17 @@ export default function MapComponent({
           title="Detect my current location with browser permission"
         >
           <Locate className={`w-3.5 h-3.5 ${geoLocating ? 'animate-spin' : ''}`} />
-          <span>{geoLocating ? 'Calibrating...' : 'My Location'}</span>
+          <span>{geoLocating ? 'Finding location...' : 'My Location'}</span>
         </button>
       </div>
 
-      {/* OSRM Route Calculation Floating Drawer */}
+      {/* Expedition Route Calculation Floating Drawer */}
       {enableRouting && routingPanelOpen && (
         <div className="absolute top-16 right-4 z-[450] w-80 sm:w-96 bg-[#FFFDF8] border-2 border-[#D6CCBC] rounded-xl shadow-lg p-4 space-y-3.5">
           <div className="flex items-center justify-between border-b border-[#D6CCBC] pb-2">
             <div className="flex items-center gap-2 text-xs font-mono font-bold text-[#777A53] uppercase">
               <Compass className="w-4 h-4 text-[#B85F43]" />
-              <span>OSRM Expedition Routing</span>
+              <span>Expedition Route Planner</span>
             </div>
             <button
               type="button"
@@ -570,7 +570,7 @@ export default function MapComponent({
               className="btn-journal-terracotta flex-1 text-xs py-2 flex items-center justify-center gap-1.5 disabled:opacity-50"
             >
               <Navigation className="w-3.5 h-3.5" />
-              <span>{routingLoading ? 'Calculating OSRM...' : 'Calculate Route'}</span>
+              <span>{routingLoading ? 'Finding your route...' : 'Calculate Route'}</span>
             </button>
 
             {routeResult && (

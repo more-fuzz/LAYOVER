@@ -142,7 +142,7 @@ export default function AdminDashboardPage() {
           </h1>
           <p className="text-xs sm:text-sm text-[#6D685C] max-w-xl mt-1">
             Inspect user-submitted photographic proof, validate trailhead coordinates, enforce safety
-            protocols, and award points atomically to the database ledger.
+            protocols, and officially certify explorer achievements.
           </p>
         </div>
 

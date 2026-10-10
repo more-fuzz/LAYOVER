@@ -10,7 +10,8 @@ export interface UserProfile {
   display_name: string;
   avatar_url: string;
   role: 'traveler' | 'admin';
-  points: number;
+  points: number; // Redeemable current balance
+  total_earned_points?: number; // Lifetime competitive earned total
   badge_title?: string;
   rank?: number;
 }
@@ -35,6 +36,7 @@ const DEFAULT_DEMO_TRAVELER: UserProfile = {
   avatar_url: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
   role: 'traveler',
   points: 850,
+  total_earned_points: 1350,
   badge_title: 'Alpine Voyager',
   rank: 6,
 };

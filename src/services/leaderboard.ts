@@ -15,10 +15,10 @@ export async function getLeaderboard(limit = 20): Promise<LeaderboardUser[]> {
 
     if (!error && profiles && profiles.length > 0) {
       const ranked: LeaderboardUser[] = profiles.map((p: any) => {
-        const total_points = (p.point_ledger || []).reduce(
-          (sum: number, l: any) => sum + (l.points_delta || 0),
-          0
-        );
+        // Lifetime earned points: sum only positive accomplishments so reward redemptions do not decrease competitive standing
+        const total_points = (p.point_ledger || [])
+          .filter((l: any) => (l.points_delta || 0) > 0)
+          .reduce((sum: number, l: any) => sum + l.points_delta, 0);
         return {
           id: p.id,
           username: p.username,

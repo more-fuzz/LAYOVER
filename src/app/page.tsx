@@ -43,13 +43,13 @@ export default async function Home() {
       step: '03',
       title: 'VERIFY',
       subtitle: 'Inspected Proof',
-      desc: 'Submit summit photographs and trail metadata to encrypted private storage for administrator review.',
+      desc: 'Submit summit photographs and trail notes for official verification by our arbiters.',
     },
     {
       step: '04',
       title: 'EARN',
-      subtitle: 'Ledger Points',
-      desc: 'Accumulate verified points on an authoritative database ledger and exchange them for genuine gear vouchers.',
+      subtitle: 'Official Points',
+      desc: 'Accumulate verified points and exchange them for authentic outfitter gear and expedition rewards.',
     },
     {
       step: '05',
@@ -137,10 +137,10 @@ export default async function Home() {
             </div>
             <div>
               <div className="text-2xl sm:text-3xl font-extrabold text-[#C6A45B] font-mono">
-                OSRM
+                LIVE
               </div>
               <div className="text-xs text-[#6D685C] font-mono mt-0.5 uppercase tracking-wider">
-                Active Route Engine
+                Expedition Routing
               </div>
             </div>
           </div>
@@ -190,7 +190,7 @@ export default async function Home() {
               Field Cartography
             </div>
             <h2 className="text-2xl sm:text-3xl font-bold text-[#292820] font-sans">
-              Interactive OpenStreetMap & OSRM Engine
+              Interactive Expedition Map & Route Planner
             </h2>
             <p className="text-xs text-[#6D685C]">
               Select waypoints, inspect elevation difficulties, and calculate driving expeditions directly.

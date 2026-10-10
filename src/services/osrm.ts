@@ -62,7 +62,7 @@ export async function calculateRouteOSRM(
     if (!response.ok) {
       return {
         success: false,
-        error: `OSRM routing service responded with status: ${response.status}`,
+        error: 'Route calculation is currently unavailable. Please try again or select another departure point.',
       };
     }
 
@@ -71,7 +71,7 @@ export async function calculateRouteOSRM(
     if (data.code !== 'Ok' || !data.routes || data.routes.length === 0) {
       return {
         success: false,
-        error: data.message || 'No direct navigable road route found between these points (e.g. overseas or deep backcountry terrain).',
+        error: 'We couldn’t find a route between these locations. Backcountry trails may require foot navigation or an alternative departure point.',
       };
     }
 
@@ -103,12 +103,12 @@ export async function calculateRouteOSRM(
     if (err.name === 'AbortError') {
       return {
         success: false,
-        error: 'OSRM routing request timed out. Please check your network connection.',
+        error: 'Route calculation took too long to respond. Please check your connection and try again.',
       };
     }
     return {
       success: false,
-      error: err.message || 'Failed to connect to OSRM routing service.',
+      error: 'We couldn’t find a route. Try another starting point.',
     };
   }
 }

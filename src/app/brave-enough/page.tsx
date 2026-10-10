@@ -112,7 +112,7 @@ export default function BraveEnoughPage() {
             <Compass className="w-4 h-4 text-[#777A53]" />
             <span>Map of Approved Enigmatic Locations</span>
           </h2>
-          <span className="text-xs font-mono text-[#8E8675]">OSRM Route Planning Supported</span>
+          <span className="text-xs font-mono text-[#8E8675]">Route Planning Available</span>
         </div>
 
         <MapComponent

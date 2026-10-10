@@ -173,3 +173,31 @@
   background-color: #FFFDF8 !important;
   border-color: #D6CCBC !important;
 }
+
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes reverseSpin {
+  from { transform: rotate(360deg); }
+  to { transform: rotate(0deg); }
+}
+
+@keyframes progressBar {
+  0% { width: 0%; }
+  60% { width: 75%; }
+  100% { width: 100%; }
+}
+
+.animate-spin-slow {
+  animation: spinSlow 12s linear infinite;
+}
+
+.animate-reverse-spin {
+  animation: reverseSpin 18s linear infinite;
+}
+
+.animate-progress {
+  animation: progressBar 1.4s ease-out forwards;
+}

@@ -201,7 +201,7 @@ export default async function AdventureArenaPage() {
             Authoritative Explorer Standings
           </h2>
           <p className="text-xs text-[#6D685C]">
-            Verified ledger transactions directly calculated from Supabase point records.
+            Lifetime adventure points calculated from officially verified expeditions and summits.
           </p>
         </div>
 

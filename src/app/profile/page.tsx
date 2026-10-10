@@ -71,8 +71,7 @@ export default function ProfilePage() {
             <span>Profile Settings & Identity</span>
           </h2>
           <p className="text-xs text-[#6D685C] mt-1 leading-relaxed">
-            In accordance with Row Level Security (RLS), explorers can edit their display identity.
-            Role escalation to administrative privileges is strictly guarded by server database policies.
+            Personalize your explorer profile and dispatch name. Account permissions and verified certifications are protected and managed by expedition arbiters.
           </p>
         </div>
 
@@ -134,10 +133,10 @@ export default function ProfilePage() {
           <div className="p-3.5 rounded-xl bg-[#F5F0E7] border border-[#D6CCBC] flex items-center justify-between text-xs">
             <div className="flex items-center gap-2 text-[#6D685C]">
               <Lock className="w-4 h-4 text-[#777A53]" />
-              <span>Database Role Security (trg_protect_profile_role):</span>
+              <span>Account Privilege Level:</span>
             </div>
-            <span className="font-bold text-[#B85F43] uppercase font-mono">
-              {role} (IMMUTABLE BY CLIENT)
+            <span className="font-bold text-[#777A53] uppercase font-mono">
+              {role === 'admin' ? 'Arbitration Lead' : 'Verified Explorer'}
             </span>
           </div>
 

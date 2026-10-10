@@ -86,8 +86,8 @@ export default function ExplorerPage() {
             Adventure Map & Route Explorer
           </h1>
           <p className="text-xs sm:text-sm text-[#6D685C] mt-1 max-w-xl">
-            Locate verified climbing boulders, glacial summits, and river rapids with OpenStreetMap
-            cartography. Calculate real driving and transit routes via the integrated OSRM engine.
+            Locate verified climbing boulders, glacial summits, and river rapids on our interactive
+            field map. Calculate real driving and transit routes to start planning your expedition.
           </p>
         </div>
 
