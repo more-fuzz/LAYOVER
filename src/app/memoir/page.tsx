@@ -1,296 +1,245 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
-import { SAMPLE_ACTIVITIES, SAMPLE_SUBMISSIONS } from '@/data/sampleData';
+import { apiClient } from '@/lib/ui/api';
+import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
+import { StampBadge } from '@/components/ui/StampBadge';
+import { EmptyState, ErrorState } from '@/components/ui/EmptyState';
+import { ImageTile } from '@/components/ui/ImageTile';
 import MapComponent from '@/components/MapComponent';
-import SafeImage from '@/components/SafeImage';
-import {
-  BookOpen,
-  MapPin,
-  Calendar,
-  Sparkles,
-  Share2,
-  Award,
-  CheckCircle2,
-  Lock,
-  Globe,
-  Compass,
-  ArrowRight,
-  Map as MapIcon,
-  List as ListIcon,
-} from 'lucide-react';
+import { ActivityItem } from '@/data/sampleData';
+
+interface MemoirEntry {
+  id: string;
+  activity_id: string;
+  activity_name: string;
+  category: string;
+  completed_at: string;
+  points_earned: number;
+  latitude: number;
+  longitude: number;
+  evidence_url: string;
+  notes?: string | null;
+  location_name: string;
+  badge_awarded?: string;
+}
+
+interface MemoirData {
+  total_expeditions: number;
+  total_points: number;
+  badges: string[];
+  entries: MemoirEntry[];
+}
 
 export default function MemoirPage() {
-  const { profile } = useAuth();
-  const [copied, setCopied] = useState(false);
-  const [privacyPublic, setPrivacyPublic] = useState(true);
+  const { user, profile, isDemoUser } = useAuth();
+  const isAuthenticated = !!user || !isDemoUser;
+
+  const [memoirData, setMemoirData] = useState<MemoirData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'timeline' | 'map'>('timeline');
 
-  // Completed verified submissions only
-  const approvedSubmissions = SAMPLE_SUBMISSIONS.filter(
-    (s) => s.status === 'approved' && (s.user_id === profile.id || s.user_id === 'u6')
-  );
-
-  const completedActivities = approvedSubmissions.map((sub) => {
-    const act = SAMPLE_ACTIVITIES.find((a) => a.id === sub.activity_id);
-    return {
-      ...sub,
-      activity: act,
-    };
-  });
-
-  const totalPoints = approvedSubmissions.reduce((sum, s) => sum + s.points, 0);
-
-  const handleShare = () => {
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
+  const loadMemoir = async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const res = await apiClient.get<MemoirData>('/api/memoir');
+      if (res.ok && res.data) {
+        setMemoirData(res.data);
+      } else {
+        setErrorMessage(res.message);
+      }
+    } catch {
+      setErrorMessage("We can't reach your journal records right now. Check connection and try again.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
+  useEffect(() => {
+    loadMemoir();
+  }, []);
+
+  const entries = memoirData?.entries || [];
+
+  // Convert entries to ActivityItem shape for map
+  const mapActivities: ActivityItem[] = entries.map((e) => ({
+    id: e.activity_id,
+    slug: e.id,
+    name: e.activity_name,
+    category: (e.category || 'hiking') as any,
+    description: e.notes || `Verified expedition record at ${e.location_name}`,
+    difficulty: 2,
+    latitude: e.latitude,
+    longitude: e.longitude,
+    base_points: e.points_earned,
+    estimated_cost: 0,
+    requirements: [],
+    safety_info: 'Verified complete.',
+    is_published: true,
+    image_url: e.evidence_url,
+    location_name: e.location_name,
+  }));
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full space-y-10">
-      {/* 1. Editorial Journal Header */}
-      <div className="bg-[#FFFDF8] border-2 border-[#D6CCBC] rounded-3xl p-6 sm:p-12 shadow-sm space-y-6 relative overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#D6CCBC] pb-4">
-          <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-[#777A53] bg-[#EAE1D3] px-3 py-1 rounded-md border border-[#D6CCBC]">
-            <BookOpen className="w-3.5 h-3.5 text-[#B85F43]" />
-            <span>FIELD LOG & ADVENTURE MEMOIR</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setPrivacyPublic(!privacyPublic)}
-              className="text-xs font-mono text-[#6D685C] bg-[#EAE1D3] hover:bg-[#D6CCBC] px-2.5 py-1 rounded-md border border-[#D6CCBC] flex items-center gap-1 transition-colors"
-            >
-              {privacyPublic ? (
-                <>
-                  <Globe className="w-3 h-3 text-[#777A53]" />
-                  <span>Public View</span>
-                </>
-              ) : (
-                <>
-                  <Lock className="w-3 h-3 text-[#B85F43]" />
-                  <span>Private Log</span>
-                </>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={handleShare}
-              className="btn-journal-primary text-xs flex items-center gap-1.5 py-1 px-3"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-              <span>{copied ? 'Link Copied! ✓' : 'Share Journal'}</span>
-            </button>
-          </div>
-        </div>
-
-        <div className="max-w-3xl space-y-3">
-          <h1 className="text-3xl sm:text-5xl font-bold text-[#292820] font-sans">
-            {profile.display_name}&apos;s Adventure Memoir
+    <div className="field-container w-full py-8 md:py-12 space-y-8 page-rise">
+      {/* 1. Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-[var(--line,#D8CBB0)] pb-6">
+        <div>
+          <span className="font-mono-label text-[11px] text-[var(--muted,#5E675F)]">
+            ARCHIVAL JOURNAL
+          </span>
+          <h1 className="font-display text-3xl md:text-5xl font-extrabold text-[var(--ink,#0F1F1A)] mt-1">
+            My <span className="font-serif-accent text-[var(--flame,#FF5A1F)]">Journal.</span>
           </h1>
-          <p className="text-xs sm:text-sm text-[#6D685C] leading-relaxed">
-            An authentic chronicle of verified mountain passes, river runs, and archaeological
-            investigations. Only officially certified accomplishments appear in this personal field guide.
+          <p className="text-xs text-[var(--muted,#5E675F)] mt-1">
+            Certified record of your completed expeditions. Evidence records are private to your passport.
           </p>
         </div>
 
-        {/* Stats Strip */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-[#D6CCBC]">
-          <div className="p-4 rounded-xl bg-[#F5F0E7] border border-[#D6CCBC] text-center">
-            <div className="text-2xl font-bold text-[#292820] font-mono">
-              {completedActivities.length}
-            </div>
-            <div className="text-[11px] text-[#6D685C] font-mono mt-0.5 uppercase">
-              Verified Expeditions
-            </div>
-          </div>
-          <div className="p-4 rounded-xl bg-[#F5F0E7] border border-[#D6CCBC] text-center">
-            <div className="text-2xl font-bold text-[#B85F43] font-mono">
-              +{totalPoints} PTS
-            </div>
-            <div className="text-[11px] text-[#6D685C] font-mono mt-0.5 uppercase">
-              Memoir Points Credited
-            </div>
-          </div>
-          <div className="p-4 rounded-xl bg-[#F5F0E7] border border-[#D6CCBC] text-center">
-            <div className="text-2xl font-bold text-[#777A53] font-mono">
-              {profile.badge_title || 'Alpine Voyager'}
-            </div>
-            <div className="text-[11px] text-[#6D685C] font-mono mt-0.5 uppercase">
-              Current Rank Badge
-            </div>
-          </div>
-          <div className="p-4 rounded-xl bg-[#F5F0E7] border border-[#D6CCBC] text-center">
-            <div className="text-2xl font-bold text-[#C6A45B] font-mono">100%</div>
-            <div className="text-[11px] text-[#6D685C] font-mono mt-0.5 uppercase">
-              Reviewer Audited
-            </div>
-          </div>
+        {/* Timeline / Map Toggle */}
+        <div className="flex items-center gap-1 p-1 bg-[var(--sand,#EADFC8)] rounded-[var(--radius,14px)] border border-[var(--line,#D8CBB0)] self-start md:self-auto">
+          <button
+            type="button"
+            onClick={() => setViewMode('timeline')}
+            aria-pressed={viewMode === 'timeline'}
+            className={`px-4 py-2 rounded-[var(--radius-sm,8px)] text-xs font-bold transition-colors ${
+              viewMode === 'timeline'
+                ? 'bg-[var(--card,#FFFAF0)] text-[var(--ink,#0F1F1A)] shadow-xs'
+                : 'text-[var(--muted,#5E675F)] hover:text-[var(--ink,#0F1F1A)]'
+            }`}
+          >
+            Polaroid Timeline
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode('map')}
+            aria-pressed={viewMode === 'map'}
+            className={`px-4 py-2 rounded-[var(--radius-sm,8px)] text-xs font-bold transition-colors ${
+              viewMode === 'map'
+                ? 'bg-[var(--card,#FFFAF0)] text-[var(--ink,#0F1F1A)] shadow-xs'
+                : 'text-[var(--muted,#5E675F)] hover:text-[var(--ink,#0F1F1A)]'
+            }`}
+          >
+            Waypoint Map
+          </button>
         </div>
       </div>
 
-      {/* 2. Journal Content with View Toggle (Timeline vs Map) */}
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#D6CCBC] pb-3">
-          <div>
-            <h2 className="text-xl font-bold text-[#292820] font-sans">
-              Personal Adventure Journal
-            </h2>
-            <p className="text-xs text-[#6D685C]">
-              Chronological field polaroids authenticated by expedition review dispatchers.
+      {/* Error state */}
+      {errorMessage && (
+        <ErrorState
+          title="Journal unavailable"
+          message={errorMessage}
+          onRetry={loadMemoir}
+        />
+      )}
+
+      {/* Loading state */}
+      {isLoading && !errorMessage && (
+        <div className="py-20 text-center font-mono-label text-xs text-[var(--muted,#5E675F)]">
+          Opening personal adventure memoir...
+        </div>
+      )}
+
+      {/* Empty State: Blank polaroid */}
+      {!isLoading && !errorMessage && entries.length === 0 && (
+        <div className="max-w-md mx-auto my-12 p-8 bg-[var(--card,#FFFAF0)] border border-[var(--line,#D8CBB0)] rounded-[var(--radius-lg,22px)] shadow-lg text-center space-y-6">
+          {/* Blank Polaroid Frame */}
+          <div className="w-56 h-64 mx-auto p-4 bg-white border border-[var(--line,#D8CBB0)] shadow-md rounded-[var(--radius-sm,8px)] flex flex-col justify-between transform -rotate-2">
+            <div className="w-full h-44 bg-[var(--sand,#EADFC8)] border border-[var(--line,#D8CBB0)] flex items-center justify-center text-[var(--muted,#5E675F)]">
+              <Icon name="compass" size={32} />
+            </div>
+            <div className="font-handwritten text-center text-sm text-[var(--muted,#5E675F)] select-none">
+              first trail photo goes here ~
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h3 className="font-display text-xl font-bold text-[var(--ink,#0F1F1A)]">
+              Your first adventure goes here.
+            </h3>
+            <p className="text-xs text-[var(--muted,#5E675F)] leading-relaxed">
+              Explore charted mountain passes, river routes, and folklore mysteries. Once completed, your verified entries appear here.
             </p>
           </div>
 
-          {/* Compact View Toggle */}
-          <div className="flex items-center bg-[#EAE1D3] p-0.5 rounded-lg border border-[#D6CCBC] self-start sm:self-auto">
-            <button
-              type="button"
-              onClick={() => setViewMode('timeline')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold transition-colors ${
-                viewMode === 'timeline'
-                  ? 'bg-[#FFFDF8] text-[#292820] shadow-xs'
-                  : 'text-[#6D685C] hover:text-[#292820]'
-              }`}
-            >
-              <ListIcon className="w-3.5 h-3.5" />
-              <span>Polaroids</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('map')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-semibold transition-colors ${
-                viewMode === 'map'
-                  ? 'bg-[#FFFDF8] text-[#292820] shadow-xs'
-                  : 'text-[#6D685C] hover:text-[#292820]'
-              }`}
-            >
-              <MapIcon className="w-3.5 h-3.5" />
-              <span>Map View</span>
-            </button>
-          </div>
+          <Button variant="flame" href="/explorer" hasArrow>
+            Explore adventures
+          </Button>
         </div>
+      )}
 
-        {/* 3. Empty State (When no journal entries exist) */}
-        {completedActivities.length === 0 ? (
-          <div className="max-w-md mx-auto my-12 p-8 bg-[#FFFDF8] border-2 border-dashed border-[#D6CCBC] rounded-2xl text-center space-y-5 shadow-xs">
-            {/* Blank Polaroid-Style Illustration */}
-            <div className="w-48 aspect-4/3 mx-auto bg-[#F5F0E7] border-2 border-[#D6CCBC] rounded-lg p-2 pb-6 flex flex-col items-center justify-center space-y-2 shadow-xs">
-              <Compass className="w-10 h-10 text-[#777A53] opacity-60" />
-              <span className="font-handwritten text-lg text-[#6D685C] -rotate-2 select-none">
-                field notes awaiting ~
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-base font-bold text-[#292820] font-sans">
-                Your first adventure goes here.
-              </h3>
-              <p className="text-xs text-[#6D685C] leading-relaxed">
-                Complete a certified trailhead, submit your summit photograph, and build your lifelong expedition memoir.
-              </p>
-            </div>
-
-            <Link
-              href="/explorer"
-              className="btn-journal-terracotta text-xs py-2 px-5 inline-flex items-center gap-2"
+      {/* Main Content: Polaroid Timeline View */}
+      {!isLoading && !errorMessage && entries.length > 0 && viewMode === 'timeline' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {entries.map((entry) => (
+            <div
+              key={entry.id}
+              className="group p-4 bg-white border border-[var(--line,#D8CBB0)] rounded-[var(--radius-sm,8px)] shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2"
             >
-              <Compass className="w-3.5 h-3.5" />
-              <span>Explore Adventures</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-        ) : viewMode === 'map' ? (
-          /* Map View */
-          <div className="rounded-2xl overflow-hidden border-2 border-[#D6CCBC] shadow-xs">
-            <MapComponent
-              activities={completedActivities.map((c) => c.activity).filter(Boolean) as any}
-              height="520px"
-              center={[30.0, 78.5]}
-              zoom={5}
-              enableRouting={true}
-            />
-          </div>
-        ) : (
-          /* Restrained Polaroid-Inspired Journal Grid */
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {completedActivities.map((item, idx) => {
-              // Custom handwritten moment for each polaroid entry
-              const handwrittenCaptions = [
-                'field notes: early dawn river ascent ~',
-                'summit achieved under clear skies ~',
-                'boulder pitch clean, zero trace left ~',
-              ];
-              const note = handwrittenCaptions[idx % handwrittenCaptions.length];
+              {/* Polaroid Image Area */}
+              <div className="relative aspect-[4/3] w-full overflow-hidden bg-[var(--sand,#EADFC8)] border border-[var(--line,#D8CBB0)] rounded-[4px]">
+                <ImageTile
+                  src={entry.evidence_url}
+                  alt={entry.activity_name}
+                  aspectRatio="4/3"
+                  className="w-full h-full object-cover"
+                />
 
-              return (
-                <div
-                  key={item.id}
-                  className="bg-[#FFFDF8] border-2 border-[#D6CCBC] rounded-xl p-3 pb-5 shadow-xs hover:border-[#777A53] transition-all flex flex-col justify-between space-y-3 relative group"
-                >
-                  {/* Photo Frame */}
-                  <div className="relative aspect-4/3 w-full rounded-lg overflow-hidden bg-[#EAE1D3] border border-[#D6CCBC]">
-                    {item.activity && (
-                      <SafeImage
-                        src={item.activity.image_url}
-                        alt={item.activity.name}
-                        aspectRatio="4/3"
-                        className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
-                      />
-                    )}
-
-                    {/* Circular Verified Achievement Stamp */}
-                    <div className="absolute top-2.5 right-2.5 z-10 w-9 h-9 rounded-full bg-[#FFFDF8]/95 border-2 border-[#777A53] flex flex-col items-center justify-center text-[#777A53] shadow-xs select-none">
-                      <span className="text-[7px] font-mono font-extrabold uppercase leading-tight">
-                        CERTIFIED
-                      </span>
-                      <span className="text-[6px] font-mono leading-none">VERIFIED</span>
-                    </div>
-
-                    {/* Category Stamp */}
-                    <div className="absolute top-2.5 left-2.5 z-10 bg-[#FFFDF8]/90 border border-[#D6CCBC] px-2 py-0.5 rounded text-[9px] font-mono font-bold text-[#777A53] uppercase">
-                      {item.activity_category}
-                    </div>
-                  </div>
-
-                  {/* Polaroid Content */}
-                  <div className="space-y-1.5 px-1">
-                    <div className="flex items-center justify-between text-[10px] font-mono text-[#6D685C]">
-                      <span>
-                        {new Date(item.reviewed_at || item.submitted_at).toLocaleDateString()}
-                      </span>
-                      <span className="font-bold text-[#B85F43]">+{item.points} PTS</span>
-                    </div>
-
-                    <h3 className="font-bold text-base text-[#292820] font-sans truncate">
-                      {item.activity_name}
-                    </h3>
-
-                    {/* Handwritten Personal Annotation */}
-                    <div className="pt-0.5">
-                      <span className="font-handwritten text-base text-[#B85F43] -rotate-1 select-none block">
-                        &quot;{note}&quot;
-                      </span>
-                    </div>
-
-                    {item.review_notes && (
-                      <p className="text-[11px] text-[#6D685C] italic pt-1 border-t border-[#D6CCBC] line-clamp-2">
-                        Arbitrator note: {item.review_notes}
-                      </p>
-                    )}
-                  </div>
+                {/* Verified Stamp: Rotated -6deg, straightens on hover with spring ease */}
+                <div className="absolute top-3 right-3 z-10 transform -rotate-6 group-hover:rotate-0 transition-transform duration-300 ease-[cubic-bezier(.3,1.5,.5,1)]">
+                  <StampBadge variant="verified" text="Verified Record" />
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+              </div>
+
+              {/* Polaroid Bottom Caption Area */}
+              <div className="pt-4 pb-2 px-1 space-y-2">
+                <div className="flex items-center justify-between text-[11px] font-mono-label text-[var(--muted,#5E675F)]">
+                  <span>{new Date(entry.completed_at).toLocaleDateString()}</span>
+                  <span className="font-bold text-[var(--jade-deep,#0B7A50)]">
+                    +{entry.points_earned} PTS
+                  </span>
+                </div>
+
+                <h3 className="font-display font-bold text-base text-[var(--ink,#0F1F1A)] line-clamp-1">
+                  {entry.activity_name}
+                </h3>
+
+                <p className="font-handwritten text-base text-[var(--text,#1A241F)] line-clamp-2 leading-tight">
+                  {entry.notes || `Completed at ${entry.location_name}`}
+                </p>
+
+                <div className="pt-2 border-t border-[var(--line,#D8CBB0)]/40 flex items-center justify-between text-[10px] font-mono-label text-[var(--muted,#5E675F)]">
+                  <span className="uppercase">{entry.category}</span>
+                  <Link
+                    href={`/activities/${entry.activity_id}`}
+                    className="text-[var(--flame,#FF5A1F)] hover:underline font-bold"
+                  >
+                    View dossier &rarr;
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Main Content: Map View */}
+      {!isLoading && !errorMessage && entries.length > 0 && viewMode === 'map' && (
+        <div className="rounded-[var(--radius-lg,22px)] overflow-hidden border border-[var(--line,#D8CBB0)]">
+          <MapComponent
+            activities={mapActivities}
+            height="580px"
+            showFilters={false}
+            enableRouting={false}
+          />
+        </div>
+      )}
     </div>
   );
 }
