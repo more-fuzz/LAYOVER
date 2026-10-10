@@ -8,46 +8,65 @@ export interface UiActivity {
   id: string;
   slug: string;
   name: string;
+  title: string;
   category: string;
   description: string;
   difficulty: number;
+  difficultyString: string;
   latitude: number;
   longitude: number;
   basePoints: number;
   estimatedCost: number | null;
+  costLabel: string;
   requirements: string[];
   safetyInfo: string;
   imageUrl?: string;
   locationName?: string;
   durationHours?: number;
+  durationMinutes?: number;
 }
 
+export type UIActivity = UiActivity;
+
 export function adaptActivity(item: any): UiActivity {
+  const name = String(item.name || item.title || '');
+  const diffNum = Number(item.difficulty || 1);
+  const cost = item.estimated_cost !== null && item.estimated_cost !== undefined ? Number(item.estimated_cost) : null;
+  const costLabel = cost !== null && cost > 0 ? `$${cost.toFixed(0)}` : 'Free / Public';
+  const diffStr = diffNum <= 1 ? 'easy' : diffNum === 2 ? 'moderate' : 'challenging';
+
   return {
     id: String(item.id),
     slug: String(item.slug || ''),
-    name: String(item.name || ''),
+    name,
+    title: name,
     category: String(item.category || 'hiking'),
     description: String(item.description || ''),
-    difficulty: Number(item.difficulty || 1),
+    difficulty: diffNum,
+    difficultyString: diffStr,
     latitude: Number(item.latitude || 0),
     longitude: Number(item.longitude || 0),
     basePoints: Number(item.base_points || 0),
-    estimatedCost: item.estimated_cost !== null && item.estimated_cost !== undefined ? Number(item.estimated_cost) : null,
+    estimatedCost: cost,
+    costLabel,
     requirements: Array.isArray(item.requirements) ? item.requirements : [],
     safetyInfo: String(item.safety_info || ''),
     imageUrl: item.image_url ? String(item.image_url) : undefined,
     locationName: item.location_name ? String(item.location_name) : undefined,
     durationHours: item.duration_hours ? Number(item.duration_hours) : undefined,
+    durationMinutes: item.duration_minutes ? Number(item.duration_minutes) : (item.duration_hours ? Math.round(Number(item.duration_hours) * 60) : undefined),
   };
 }
 
 export interface UiDestination {
   id: string;
   name: string;
+  title: string;
   category: string;
   description: string;
   historicalContext?: string | null;
+  historyText?: string | null;
+  hasHistory: boolean;
   sourceUrl?: string | null;
   latitude: number;
   longitude: number;
@@ -55,25 +74,38 @@ export interface UiDestination {
   isSpooky: boolean;
   spookyRating?: number;
   folkloreLegend?: string | null;
+  folkloreText?: string | null;
+  hasFolklore: boolean;
   safetyAdvisory?: string | null;
   locationName?: string;
   imageUrl?: string;
 }
 
+export type UIDestination = UiDestination;
+
 export function adaptDestination(item: any): UiDestination {
+  const name = String(item.name || item.title || '');
+  const history = item.historical_context || item.historical_significance || null;
+  const folklore = item.folklore_legend || item.folklore_description || null;
+
   return {
     id: String(item.id),
-    name: String(item.name || ''),
+    name,
+    title: name,
     category: String(item.category || 'historical'),
     description: String(item.description || ''),
-    historicalContext: item.historical_context ?? null,
+    historicalContext: history,
+    historyText: history,
+    hasHistory: Boolean(history),
     sourceUrl: item.source_url ?? null,
     latitude: Number(item.latitude || 0),
     longitude: Number(item.longitude || 0),
     accessNotes: item.access_notes ?? null,
     isSpooky: Boolean(item.is_spooky),
     spookyRating: item.spooky_rating ? Number(item.spooky_rating) : undefined,
-    folkloreLegend: item.folklore_legend ?? null,
+    folkloreLegend: folklore,
+    folkloreText: folklore,
+    hasFolklore: Boolean(folklore),
     safetyAdvisory: item.safety_advisory ?? null,
     locationName: item.location_name ? String(item.location_name) : undefined,
     imageUrl: item.image_url ? String(item.image_url) : undefined,

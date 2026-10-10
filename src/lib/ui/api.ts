@@ -120,3 +120,15 @@ export async function apiFetch<T = any>(
     };
   }
 }
+
+export const apiClient = {
+  get: <T = any>(endpoint: string, options?: RequestInit) =>
+    apiFetch<T>(endpoint, { ...options, method: 'GET' }),
+  post: <T = any>(endpoint: string, body?: any, options?: RequestInit) =>
+    apiFetch<T>(endpoint, {
+      ...options,
+      method: 'POST',
+      body: body ? JSON.stringify(body) : undefined,
+    }),
+};
+

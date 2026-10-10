@@ -289,6 +289,20 @@
   animation: liveDotBlink 1.4s infinite;
 }
 
+/* Marquee Ticker Band (38s linear, pauses under reduced motion) */
+@keyframes marqueeAnim {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+.ticker-marquee {
+  display: flex;
+  width: max-content;
+  animation: marqueeAnim 38s linear infinite;
+}
+.ticker-marquee:hover {
+  animation-play-state: paused;
+}
+
 /* Rise in */
 @keyframes riseIn {
   from {
