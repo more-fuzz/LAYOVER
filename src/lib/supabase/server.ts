@@ -1,7 +1,19 @@
 import { createServerClient } from '@supabase/ssr';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { cookies } from 'next/headers';
 import { Database } from '@/types/database.types';
 import { getPublicEnv } from '@/lib/env';
+
+/**
+ * Creates a public, cookie-free client safe for static page prerendering.
+ */
+export function createPublicClient() {
+  const env = getPublicEnv();
+  return createSupabaseClient<Database>(
+    env.NEXT_PUBLIC_SUPABASE_URL,
+    env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+  );
+}
 
 /**
  * Creates an isolated, cookie-aware Supabase client for server execution.

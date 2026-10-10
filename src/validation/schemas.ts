@@ -36,7 +36,7 @@ export const destinationFilterSchema = z.object({
 });
 
 export const submissionCreateSchema = z.object({
-  activity_id: z.string().uuid('Invalid activity UUID'),
+  activity_id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, 'Invalid activity UUID'),
   evidence_path: z.string().min(1, 'Evidence storage path is required'),
   claimed_latitude: z.number().min(-90).max(90).nullable().optional(),
   claimed_longitude: z.number().min(-180).max(180).nullable().optional(),
@@ -48,7 +48,7 @@ export const submissionReviewSchema = z.object({
 });
 
 export const redemptionCreateSchema = z.object({
-  reward_id: z.string().uuid('Invalid reward UUID'),
+  reward_id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i, 'Invalid reward UUID'),
 });
 
 export const consentRecordSchema = z.object({

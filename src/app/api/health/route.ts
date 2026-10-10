@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getOptionalPublicEnv } from '@/lib/env';
 
+
 /**
  * Health check endpoint to verify that the Next.js server is operational
  * and environment configuration status.
