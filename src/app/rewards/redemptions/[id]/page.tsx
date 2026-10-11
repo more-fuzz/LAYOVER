@@ -194,37 +194,45 @@ export default function CouponRedemptionPage() {
                 YOUR UNIQUE CLAIM CODE
               </span>
 
-              {/* Huge display code */}
-              <div className="font-display font-extrabold text-2xl sm:text-4xl text-[var(--paper,#F6EFE2)] tracking-widest tabular-nums select-all py-1">
-                {redemption.claimCode}
-              </div>
+              {/* Huge display code or unavailable notice */}
+              {redemption.claimCode ? (
+                <>
+                  <div className="font-display font-extrabold text-2xl sm:text-4xl text-[var(--paper,#F6EFE2)] tracking-widest tabular-nums select-all py-1">
+                    {redemption.claimCode}
+                  </div>
 
-              {/* Copy Code Button with Rotated Copied Stamp */}
-              <div className="relative inline-block">
-                <button
-                  type="button"
-                  onClick={handleCopyCode}
-                  aria-live="polite"
-                  className={`btn-field ${
-                    copied
-                      ? 'bg-[var(--jade-deep,#0B7A50)] text-white border-[var(--jade-deep,#0B7A50)]'
-                      : 'btn-citron'
-                  } text-xs font-bold py-2 px-5 transition-all`}
-                >
-                  <Icon name={copied ? 'check' : 'copy'} size={14} aria-hidden="true" />
-                  <span>{copied ? 'Code copied' : 'Copy code'}</span>
-                </button>
+                  {/* Copy Code Button with Rotated Copied Stamp */}
+                  <div className="relative inline-block">
+                    <button
+                      type="button"
+                      onClick={handleCopyCode}
+                      aria-live="polite"
+                      className={`btn-field ${
+                        copied
+                          ? 'bg-[var(--jade-deep,#0B7A50)] text-white border-[var(--jade-deep,#0B7A50)]'
+                          : 'btn-citron'
+                      } text-xs font-bold py-2 px-5 transition-all`}
+                    >
+                      <Icon name={copied ? 'check' : 'copy'} size={14} aria-hidden="true" />
+                      <span>{copied ? 'Code copied' : 'Copy code'}</span>
+                    </button>
 
-                {/* Animated rotated "Copied" stamp */}
-                {copied && (
-                  <span
-                    aria-hidden="true"
-                    className="absolute -top-3 -right-6 font-mono-label text-[10px] font-extrabold px-2 py-0.5 rounded bg-[var(--citron,#D8F23C)] text-[var(--ink,#0F1F1A)] border border-[var(--ink,#0F1F1A)] transform -rotate-8 animate-in zoom-in-150 duration-200 shadow-md"
-                  >
-                    COPIED
-                  </span>
-                )}
-              </div>
+                    {/* Animated rotated "Copied" stamp */}
+                    {copied && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute -top-3 -right-6 font-mono-label text-[10px] font-extrabold px-2 py-0.5 rounded bg-[var(--citron,#D8F23C)] text-[var(--ink,#0F1F1A)] border border-[var(--ink,#0F1F1A)] transform -rotate-8 animate-in zoom-in-150 duration-200 shadow-md"
+                      >
+                        COPIED
+                      </span>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div className="p-4 rounded-[var(--radius-sm,8px)] bg-[var(--ink,#0F1F1A)] text-xs text-[var(--sand,#EADFC8)] font-mono-label">
+                  This voucher claim code is currently unavailable from the partner depot.
+                </div>
+              )}
             </div>
 
             {/* Ticket Perforation Line with notches */}

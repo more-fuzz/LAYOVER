@@ -101,10 +101,17 @@ export async function apiFetch<T = any>(
 
     const sanitizedMsg = sanitizeErrorMessage(message, res.status);
 
+    const payloadData =
+      parsedData && typeof parsedData === 'object' && parsedData.data !== undefined
+        ? parsedData.data
+        : res.ok
+        ? parsedData
+        : null;
+
     return {
       ok: res.ok,
       status: res.status,
-      data: parsedData?.data ?? (parsedData && !parsedData.message ? parsedData : null),
+      data: payloadData,
       message: sanitizedMsg,
     };
   } catch (err: any) {

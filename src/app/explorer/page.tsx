@@ -31,6 +31,7 @@ function ExplorerContent() {
   const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
   const [selectedId, setSelectedItemId] = useState<string | undefined>(initialDestId);
   const [mobileView, setMobileView] = useState<'list' | 'map'>('list');
+  const [locateTarget, setLocateTarget] = useState<[number, number] | null>(null);
 
   // Load activities and destinations from API
   const loadData = async () => {
@@ -346,12 +347,16 @@ function ExplorerContent() {
                 selectedId={selectedId}
                 onSelectMarker={(item) => setSelectedItemId(item.id)}
                 isAfterDark={isAfterDark}
+                locateTarget={locateTarget}
                 height="620px"
               />
 
               {/* Bottom Selected Sheet */}
               {(selectedActivity || selectedDestination) && (
-                <div className="absolute bottom-4 left-4 right-4 z-[400] bg-[var(--card,#FFFAF0)] text-[var(--ink,#0F1F1A)] border-[1.5px] border-[var(--ink,#0F1F1A)] rounded-[var(--radius,14px)] p-4 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute bottom-4 left-4 right-4 z-[400] bg-[var(--card,#FFFAF0)] text-[var(--ink,#0F1F1A)] border-[1.5px] border-[var(--ink,#0F1F1A)] rounded-[var(--radius,14px)] p-4 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200"
+                >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -388,8 +393,25 @@ function ExplorerContent() {
                       </div>
                     </div>
 
-                    {/* Action buttons: Directions & View Details */}
+                    {/* Action buttons: Locate on map, View Details, Dismiss */}
                     <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const item = selectedActivity || selectedDestination;
+                          if (item?.latitude && item?.longitude) {
+                            setLocateTarget([item.latitude, item.longitude]);
+                          }
+                        }}
+                        title="Locate this waypoint on map"
+                        aria-label="Locate this waypoint on map"
+                        className="btn-field btn-outline text-xs font-mono-label py-1.5 px-3 flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Icon name="compass" size={12} aria-hidden="true" />
+                        <span>Locate</span>
+                      </button>
+
                       {selectedActivity && (
                         <Button
                           variant="ink"
@@ -410,6 +432,15 @@ function ExplorerContent() {
                           Dossier
                         </Button>
                       )}
+
+                      <button
+                        type="button"
+                        onClick={() => setSelectedItemId(undefined)}
+                        className="text-[var(--muted,#5E675F)] hover:text-[var(--ink,#0F1F1A)] p-1 rounded transition-colors"
+                        aria-label="Close sheet"
+                      >
+                        <Icon name="close" size={16} aria-hidden="true" />
+                      </button>
                     </div>
                   </div>
                 </div>

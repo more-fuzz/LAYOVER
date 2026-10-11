@@ -18,6 +18,7 @@ interface MapComponentProps {
   showFilters?: boolean;
   enableRouting?: boolean;
   isAfterDark?: boolean;
+  locateTarget?: [number, number] | null;
 }
 
 const PRESET_ORIGINS: { label: string; coords: [number, number] }[] = [
@@ -40,15 +41,15 @@ export default function MapComponent({
   showFilters = false,
   enableRouting = true,
   isAfterDark = false,
+  locateTarget = null,
 }: MapComponentProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markersLayerRef = useRef<any>(null);
   const routeLayerRef = useRef<any>(null);
+  const initialFitDoneRef = useRef(false);
 
   const [activeFilter, setActiveFilter] = useState<'all' | 'activities' | 'destinations'>('all');
-  const [userCoords, setUserCoords] = useState<[number, number] | null>(null);
-  const [geoLocating, setGeoLocating] = useState(false);
 
   // Routing state
   const [selectedDestination, setSelectedDestination] = useState<
@@ -60,9 +61,8 @@ export default function MapComponent({
   const [originLabel, setOriginLabel] = useState<string>(PRESET_ORIGINS[0].label);
   const [routeResult, setRouteResult] = useState<RouteResult | null>(null);
   const [routingLoading, setRoutingLoading] = useState(false);
-  const [routingPanelOpen, setRoutingPanelOpen] = useState(false);
 
-  // Initialize Leaflet Map
+  // Initialize Leaflet Map once
   useEffect(() => {
     let isMounted = true;
 
@@ -97,9 +97,7 @@ export default function MapComponent({
         mapInstanceRef.current = map;
         markersLayerRef.current = markersLayer;
         routeLayerRef.current = routeLayer;
-      }
 
-      if (mapInstanceRef.current && markersLayerRef.current) {
         renderMarkers(L);
       }
     }
@@ -111,11 +109,46 @@ export default function MapComponent({
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+        markersLayerRef.current = null;
+        routeLayerRef.current = null;
       }
     };
   }, []);
 
-  // Re-render markers when props or selection change
+  // ResizeObserver: handle container resizing, mobile drawer/view toggles without recreating the map
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
+
+    let resizeTimer: any = null;
+    const handleResize = () => {
+      if (mapInstanceRef.current) {
+        clearTimeout(resizeTimer);
+        resizeTimer = setTimeout(() => {
+          if (mapInstanceRef.current) {
+            mapInstanceRef.current.invalidateSize({ debounceMoveend: true });
+          }
+        }, 50);
+      }
+    };
+
+    let observer: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      observer = new ResizeObserver(handleResize);
+      observer.observe(mapContainerRef.current);
+    }
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      clearTimeout(resizeTimer);
+      if (observer) {
+        observer.disconnect();
+      }
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  // Re-render marker visuals when props or selection change (without viewport movement)
   useEffect(() => {
     if (mapInstanceRef.current) {
       import('leaflet').then((module) => {
@@ -124,7 +157,17 @@ export default function MapComponent({
     }
   }, [activities, destinations, activeFilter, selectedId, isAfterDark]);
 
-  // Sync selectedId with destination
+  // Handle explicit user-initiated locate actions
+  useEffect(() => {
+    if (locateTarget && mapInstanceRef.current) {
+      mapInstanceRef.current.panTo(locateTarget, {
+        animate: true,
+        duration: 0.5,
+      });
+    }
+  }, [locateTarget]);
+
+  // Sync selectedId with destination for routing info
   useEffect(() => {
     if (selectedId) {
       const act = activities.find((a) => a.id === selectedId);
@@ -290,18 +333,57 @@ export default function MapComponent({
       });
     }
 
-    if (bounds.length > 0 && !selectedId) {
-      mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
-    } else if (selectedId) {
-      const selectedItem =
-        activities.find((a) => a.id === selectedId) ||
-        destinations.find((d) => d.id === selectedId);
-      if (selectedItem?.latitude && selectedItem?.longitude) {
-        mapInstanceRef.current.panTo([selectedItem.latitude, selectedItem.longitude], {
-          animate: true,
-          duration: 0.5,
-        });
+    // Only perform automatic fit/view once on the initial load of markers
+    if (!initialFitDoneRef.current) {
+      if (selectedId) {
+        const selectedItem =
+          activities.find((a) => a.id === selectedId) ||
+          destinations.find((d) => d.id === selectedId);
+        if (selectedItem?.latitude && selectedItem?.longitude) {
+          mapInstanceRef.current.setView(
+            [selectedItem.latitude, selectedItem.longitude],
+            Math.max(zoom, 8)
+          );
+          initialFitDoneRef.current = true;
+          return;
+        }
       }
+
+      if (bounds.length > 0) {
+        mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+        initialFitDoneRef.current = true;
+      }
+    }
+    // Subsequent re-renders deliberately do not move or reset viewport!
+  };
+
+  // Explicit user action: Fit all charted waypoints into view
+  const handleFitResults = () => {
+    if (!mapInstanceRef.current) return;
+    const bounds: [number, number][] = [];
+    if (activeFilter === 'all' || activeFilter === 'activities') {
+      activities.forEach((act) => {
+        if (act.latitude && act.longitude) bounds.push([act.latitude, act.longitude]);
+      });
+    }
+    if (activeFilter === 'all' || activeFilter === 'destinations') {
+      destinations.forEach((dest) => {
+        if (dest.latitude && dest.longitude) bounds.push([dest.latitude, dest.longitude]);
+      });
+    }
+    if (bounds.length > 0) {
+      mapInstanceRef.current.fitBounds(bounds, { padding: [40, 40], maxZoom: 8 });
+    }
+  };
+
+  // Explicit user action: Center map on selected waypoint
+  const handleLocateSelected = () => {
+    if (!mapInstanceRef.current || !selectedDestination) return;
+    if (selectedDestination.latitude && selectedDestination.longitude) {
+      mapInstanceRef.current.panTo([selectedDestination.latitude, selectedDestination.longitude], {
+        animate: true,
+        duration: 0.5,
+      });
     }
   };
 
@@ -351,15 +433,44 @@ export default function MapComponent({
       className={`relative w-full rounded-[var(--radius-lg,22px)] overflow-hidden border-[1.5px] border-[var(--ink,#0F1F1A)] ${
         isAfterDark ? 'map-after-dark' : ''
       }`}
-      style={{ minHeight: height }}
+      style={{ minHeight: height, height }}
     >
-      {/* After Dark Indicator Banner */}
-      {isAfterDark && (
-        <div className="absolute top-4 left-4 z-[400] bg-[var(--ink,#0F1F1A)] text-[var(--citron,#D8F23C)] border border-[var(--citron,#D8F23C)] px-3 py-1 rounded-[var(--radius-sm,8px)] font-mono-label text-[11px] font-bold flex items-center gap-2 shadow-lg">
-          <span className="w-2 h-2 rounded-full bg-[var(--citron,#D8F23C)]" aria-hidden="true" />
-          <span>AFTER DARK MODE</span>
-        </div>
-      )}
+      {/* Map Control Toolbar: After Dark indicator, Fit results, Locate */}
+      <div className="absolute top-4 left-4 z-[400] flex flex-wrap items-center gap-2">
+        {/* After Dark Indicator Banner */}
+        {isAfterDark && (
+          <div className="bg-[var(--ink,#0F1F1A)] text-[var(--citron,#D8F23C)] border border-[var(--citron,#D8F23C)] px-3 py-1.5 rounded-[var(--radius-sm,8px)] font-mono-label text-[11px] font-bold flex items-center gap-2 shadow-lg">
+            <span className="w-2 h-2 rounded-full bg-[var(--citron,#D8F23C)]" aria-hidden="true" />
+            <span>AFTER DARK MODE</span>
+          </div>
+        )}
+
+        {/* Explicit Fit Results Button */}
+        <button
+          type="button"
+          onClick={handleFitResults}
+          title="Fit charted waypoints into view"
+          aria-label="Fit results into viewport"
+          className="btn-field bg-[var(--card,#FFFAF0)] text-[var(--ink,#0F1F1A)] border border-[var(--ink,#0F1F1A)] shadow-md text-[11px] font-mono-label font-bold py-1.5 px-3 flex items-center gap-1.5 hover:bg-[var(--sand,#EADFC8)] transition-all cursor-pointer"
+        >
+          <Icon name="route" size={12} aria-hidden="true" />
+          <span>Fit results</span>
+        </button>
+
+        {/* Explicit Locate Waypoint Button (only when an item is selected) */}
+        {selectedDestination && selectedDestination.latitude && (
+          <button
+            type="button"
+            onClick={handleLocateSelected}
+            title={`Locate ${selectedDestination.name}`}
+            aria-label={`Locate ${selectedDestination.name}`}
+            className="btn-field bg-[var(--card,#FFFAF0)] text-[var(--ink,#0F1F1A)] border border-[var(--ink,#0F1F1A)] shadow-md text-[11px] font-mono-label font-bold py-1.5 px-3 flex items-center gap-1.5 hover:bg-[var(--sand,#EADFC8)] transition-all cursor-pointer"
+          >
+            <Icon name="compass" size={12} aria-hidden="true" />
+            <span>Locate</span>
+          </button>
+        )}
+      </div>
 
       {/* Route Direction Panel (Accessible overlay if routing active) */}
       {enableRouting && selectedDestination && (
@@ -427,7 +538,7 @@ export default function MapComponent({
       )}
 
       {/* Map DOM Element */}
-      <div ref={mapContainerRef} className="w-full h-full" style={{ minHeight: height }} />
+      <div ref={mapContainerRef} className="w-full h-full" style={{ minHeight: height, height }} />
     </div>
   );
 }
