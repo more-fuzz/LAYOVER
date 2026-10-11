@@ -3,256 +3,163 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import MapComponent from '@/components/MapComponent';
-import SafeImage from '@/components/SafeImage';
 import { SAMPLE_DESTINATIONS, DestinationItem } from '@/data/sampleData';
-import {
-  Ghost,
-  ShieldCheck,
-  Compass,
-  AlertTriangle,
-  BookOpen,
-  MapPin,
-  ExternalLink,
-  Sparkles,
-  CheckCircle2,
-  HelpCircle,
-  FileText,
-  ArrowLeft,
-} from 'lucide-react';
+import { adaptDestination } from '@/lib/ui/adapters';
+import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
+import { StampBadge } from '@/components/ui/StampBadge';
+import { ImageTile } from '@/components/ui/ImageTile';
 
 export default function BraveEnoughPage() {
   const spookyDestinations = SAMPLE_DESTINATIONS.filter((d) => d.is_spooky);
-  const [selectedDestId, setSelectedDestId] = useState<string | undefined>(undefined);
-  const [investigatedIds, setInvestigatedIds] = useState<string[]>([]);
-
-  const toggleInvestigated = (id: string) => {
-    if (investigatedIds.includes(id)) {
-      setInvestigatedIds(investigatedIds.filter((item) => item !== id));
-    } else {
-      setInvestigatedIds([...investigatedIds, id]);
-    }
-  };
+  const [selectedDestId, setSelectedDestId] = useState<string | undefined>(spookyDestinations[0]?.id);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 w-full space-y-8">
+    <div className="field-container w-full py-8 md:py-12 space-y-8 page-rise">
       {/* 1. Clear Exit Route back to Normal Explore */}
-      <div className="flex items-center justify-between border-b border-[#D6CCBC] pb-3">
+      <div className="flex items-center justify-between border-b border-[var(--line,#D8CBB0)] pb-4">
         <Link
           href="/explorer"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-[#6D685C] hover:text-[#292820] bg-[#EAE1D3] hover:bg-[#D6CCBC]/50 border border-[#D6CCBC] px-3 py-1.5 rounded-lg transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--muted,#5E675F)] hover:text-[var(--ink,#0F1F1A)] transition-colors"
         >
-          <ArrowLeft className="w-3.5 h-3.5 text-[#B85F43]" />
+          <Icon name="arrow-left" size={14} aria-hidden="true" />
           <span>Return to Normal Explore</span>
         </Link>
-        <span className="font-handwritten text-base sm:text-lg text-[#777A53] select-none">
-          secret field archives unlocked ~
+        <span className="font-mono-label text-[10px] text-[var(--citron,#D8F23C)] bg-[var(--ink,#0F1F1A)] px-2.5 py-1 rounded-[6px]">
+          AFTER DARK DOSSIER
         </span>
       </div>
 
-      {/* Editorial Header Banner */}
-      <div className="bg-[#FFFDF8] border-2 border-[#D6CCBC] rounded-3xl p-8 sm:p-12 shadow-sm space-y-6 relative overflow-hidden">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[#D6CCBC] pb-4">
-          <div className="inline-flex items-center gap-1.5 text-xs font-mono font-bold uppercase tracking-wider text-[#B85F43] bg-[#EAE1D3] px-3 py-1 rounded-md border border-[#D6CCBC]">
-            <Ghost className="w-3.5 h-3.5 text-[#B85F43]" />
-            <span>FIELD FOLKLORE & ANCIENT MYSTERIES</span>
-          </div>
-          <span className="retro-stamp text-[10px]">DAYLIGHT HERITAGE STUDY</span>
-        </div>
-
-        <div className="max-w-3xl space-y-4">
-          <h1 className="text-3xl sm:text-5xl font-bold text-[#292820] font-sans leading-tight">
-            &quot;Am I Brave Enough?&quot; Field Studies
-          </h1>
-          <p className="text-sm sm:text-base text-[#6D685C] leading-relaxed">
-            A restrained exploration of the world&apos;s most intriguing geological enigmas, abandoned
-            archaeological citadels, and centuries-old regional folklore. Each dossier separates
-            verified historical facts from oral lore.
-          </p>
-
-          {/* Strict Safety Protocol Advisory */}
-          <div className="p-4 rounded-xl bg-[#EAE1D3]/70 border border-[#D6CCBC] flex items-start gap-3 text-xs text-[#6D685C]">
-            <ShieldCheck className="w-5 h-5 text-[#B85F43] shrink-0 mt-0.5" />
-            <div>
-              <span className="font-bold text-[#292820]">Ethical Field Protocol: </span>
-              All catalogued sites are officially registered public heritage monuments. We strictly
-              forbid night trespassing, violating Archaeological Survey or park guidelines, or treating
-              cultural tragedy as entertainment. Always explore during daylight hours with certified guides.
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Field Dossier Progress Widget */}
-      <div className="p-5 rounded-2xl bg-[#FFFDF8] border border-[#D6CCBC] shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-xl bg-[#EAE1D3] border border-[#D6CCBC] flex items-center justify-center text-xl shrink-0">
-            📜
-          </div>
-          <div>
-            <div className="text-[10px] uppercase font-mono font-bold text-[#777A53]">
-              Dossier Reconnaissance Tracker
-            </div>
-            <div className="text-base font-bold text-[#292820] font-sans">
-              {investigatedIds.length === spookyDestinations.length
-                ? 'Master Folklore Cartographer 🏆'
-                : investigatedIds.length > 0
-                ? 'Active Field Investigator'
-                : 'Curious Historical Wanderer'}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 max-w-md w-full">
-          <div className="flex justify-between text-xs font-mono font-bold text-[#6D685C] mb-1.5">
-            <span>Dossiers Studied:</span>
-            <span>
-              {investigatedIds.length} / {spookyDestinations.length} Recorded
+      {/* Editorial Ink Header Banner */}
+      <div className="panel-ink p-8 md:p-12 border border-[var(--ink-line,#2D4C42)] shadow-2xl space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--ink-line,#2D4C42)] pb-4">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[var(--citron,#D8F23C)] animate-ping" aria-hidden="true" />
+            <span className="font-mono-label text-[11px] text-[var(--citron,#D8F23C)] font-bold">
+              FOLKLORE &amp; ANCIENT MYSTERIES
             </span>
           </div>
-          <div className="w-full bg-[#EAE1D3] h-2.5 rounded-full overflow-hidden border border-[#D6CCBC]">
-            <div
-              className="bg-[#B85F43] h-full rounded-full transition-all duration-300"
-              style={{
-                width: `${(investigatedIds.length / spookyDestinations.length) * 100}%`,
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Interactive Map of Enigmatic Destinations */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between border-b border-[#D6CCBC] pb-2">
-          <h2 className="text-lg font-bold text-[#292820] flex items-center gap-2 font-sans">
-            <Compass className="w-4 h-4 text-[#777A53]" />
-            <span>Map of Approved Enigmatic Locations</span>
-          </h2>
-          <span className="text-xs font-mono text-[#8E8675]">Route Planning Available</span>
+          <span className="font-mono-label text-[10px] text-[var(--sand,#EADFC8)]">
+            PUBLIC, ACCESSIBLE PLACES ONLY
+          </span>
         </div>
 
-        <MapComponent
-          destinations={spookyDestinations}
-          selectedId={selectedDestId}
-          height="480px"
-          center={[27.0, 76.0]}
-          zoom={4}
-          enableRouting={true}
-          onSelectMarker={(item) => setSelectedDestId(item.id)}
-        />
-      </div>
-
-      {/* Detailed Dossiers Grid */}
-      <div className="space-y-6 pt-2">
-        <div className="border-b border-[#D6CCBC] pb-2">
-          <h2 className="text-xl font-bold text-[#292820] font-sans">
-            Archaeological & Geological Dossiers
-          </h2>
-          <p className="text-xs text-[#6D685C]">
-            Verified field records, historical timeline context, and documented oral folklore.
+        <div className="max-w-2xl space-y-3">
+          <h1 className="font-display text-3xl md:text-5xl font-extrabold text-[var(--paper,#F6EFE2)] tracking-tight">
+            Am I brave <span className="font-serif-accent text-[var(--citron,#D8F23C)] font-normal">enough?</span>
+          </h1>
+          <p className="text-sm md:text-base text-[var(--sand,#EADFC8)] leading-relaxed">
+            A dusk-to-dawn survey of regional lore, meteor craters, and high-altitude legends. Every destination is rigorously separated between documented historical fact and local oral folklore.
           </p>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {spookyDestinations.map((dest) => {
-            const isStudied = investigatedIds.includes(dest.id);
-            const isFocused = selectedDestId === dest.id;
-
-            return (
-              <div
-                id={dest.id}
-                key={dest.id}
-                className={`rounded-2xl bg-[#FFFDF8] border overflow-hidden shadow-xs transition-all ${
-                  isFocused
-                    ? 'border-[#B85F43] ring-2 ring-[#B85F43]/30'
-                    : 'border-[#D6CCBC] hover:border-[#777A53]'
-                }`}
-              >
-                <div className="relative w-full">
-                  <SafeImage
-                    src={dest.image_url}
-                    alt={dest.name}
-                    aspectRatio="16/9"
-                    fallbackTitle={dest.name}
-                  />
-                  <div className="absolute top-3 left-3 bg-[#FFFDF8]/90 px-2 py-0.5 rounded text-[10px] font-mono font-bold text-[#B85F43] uppercase border border-[#D6CCBC]">
-                    {dest.category.replace('_', ' ')}
-                  </div>
-                  <div className="absolute top-3 right-3 bg-[#EAE1D3] text-[#292820] border border-[#D6CCBC] px-2 py-0.5 rounded text-[10px] font-mono font-bold">
-                    DAYLIGHT ONLY
-                  </div>
-                </div>
-
-                <div className="p-6 space-y-4">
-                  <div>
-                    <div className="flex items-center gap-1.5 text-xs text-[#6D685C] mb-1 font-mono">
-                      <MapPin className="w-3.5 h-3.5 text-[#B85F43]" />
-                      <span>{dest.location_name}</span>
-                    </div>
-                    <h3 className="text-xl font-bold text-[#292820] font-sans">{dest.name}</h3>
-                    <p className="text-xs sm:text-sm text-[#6D685C] mt-2 leading-relaxed">
-                      {dest.description}
-                    </p>
-                  </div>
-
-                  {/* Fact vs Folklore Comparison Box */}
-                  <div className="space-y-2.5 pt-2 border-t border-[#D6CCBC]">
-                    <div className="p-3 bg-[#F5F0E7] rounded-xl border border-[#D6CCBC] space-y-1">
-                      <div className="text-[10px] font-mono font-bold uppercase text-[#777A53] flex items-center gap-1">
-                        <FileText className="w-3 h-3" />
-                        <span>Verified Historical & Scientific Context</span>
-                      </div>
-                      <p className="text-xs text-[#292820] leading-relaxed">
-                        {dest.historical_context ||
-                          'Registered historical monument with official preservation status.'}
-                      </p>
-                    </div>
-
-                    {dest.folklore_legend && (
-                      <div className="p-3 bg-[#FFFDF8] rounded-xl border border-[#D6CCBC] space-y-1">
-                        <div className="text-[10px] font-mono font-bold uppercase text-[#B85F43] flex items-center gap-1">
-                          <Ghost className="w-3 h-3" />
-                          <span>Oral Folklore & Legends (Unverified)</span>
-                        </div>
-                        <p className="text-xs text-[#6D685C] italic leading-relaxed">
-                          &quot;{dest.folklore_legend}&quot;
-                        </p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Action Bar */}
-                  <div className="pt-3 border-t border-[#D6CCBC] flex items-center justify-between">
-                    <button
-                      type="button"
-                      onClick={() => toggleInvestigated(dest.id)}
-                      className={`text-xs font-mono font-bold py-1.5 px-3 rounded-lg flex items-center gap-1.5 transition-colors ${
-                        isStudied
-                          ? 'bg-[#EAE1D3] text-[#777A53] border border-[#D6CCBC]'
-                          : 'btn-journal-secondary'
-                      }`}
-                    >
-                      <CheckCircle2
-                        className={`w-3.5 h-3.5 ${
-                          isStudied ? 'text-[#777A53]' : 'text-[#8E8675]'
-                        }`}
-                      />
-                      <span>{isStudied ? 'Dossier Recorded' : 'Mark as Studied'}</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setSelectedDestId(dest.id)}
-                      className="text-xs font-bold text-[#B85F43] hover:underline flex items-center gap-1"
-                    >
-                      <span>Focus on Map</span>
-                      <Compass className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })}
+      {/* Map in After Dark Mode */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <h2 className="font-display font-bold text-xl text-[var(--ink,#0F1F1A)]">
+            Cartography of Regional Legends
+          </h2>
+          <span className="font-mono-label text-[11px] text-[var(--muted,#5E675F)]">
+            {spookyDestinations.length} sites charted
+          </span>
         </div>
+
+        <div className="rounded-[28px] overflow-hidden border-[1.5px] border-[var(--ink,#0F1F1A)]">
+          <MapComponent
+            destinations={spookyDestinations}
+            selectedId={selectedDestId}
+            onSelectMarker={(item) => setSelectedDestId(item.id)}
+            isAfterDark={true}
+            height="460px"
+            showFilters={false}
+          />
+        </div>
+      </div>
+
+      {/* Folklore Dossier Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {spookyDestinations.map((dest) => {
+          const adapted = adaptDestination(dest);
+          const isSelected = selectedDestId === dest.id;
+
+          return (
+            <div
+              key={dest.id}
+              id={dest.id}
+              onClick={() => setSelectedDestId(dest.id)}
+              className={`p-6 rounded-[var(--radius-lg,22px)] border transition-all cursor-pointer space-y-4 ${
+                isSelected
+                  ? 'bg-[var(--ink,#0F1F1A)] text-[var(--paper,#F6EFE2)] border-[var(--citron,#D8F23C)] shadow-xl'
+                  : 'bg-[var(--card,#FFFAF0)] text-[var(--text,#1A241F)] border-[var(--line,#D8CBB0)] hover:border-[var(--ink-line,#2D4C42)]'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <StampBadge
+                  variant="folklore"
+                  text={adapted.hasFolklore ? 'Local Folklore' : 'Documented History'}
+                />
+                <span
+                  className={`font-mono-label text-[10px] ${
+                    isSelected ? 'text-[var(--citron,#D8F23C)]' : 'text-[var(--muted,#5E675F)]'
+                  }`}
+                >
+                  {adapted.category}
+                </span>
+              </div>
+
+              <div>
+                <h3
+                  className={`font-display font-bold text-xl ${
+                    isSelected ? 'text-[var(--paper,#F6EFE2)]' : 'text-[var(--ink,#0F1F1A)]'
+                  }`}
+                >
+                  {adapted.name}
+                </h3>
+                <p
+                  className={`text-xs mt-1 leading-relaxed ${
+                    isSelected ? 'text-[var(--sand,#EADFC8)]' : 'text-[var(--muted,#5E675F)]'
+                  }`}
+                >
+                  {adapted.description}
+                </p>
+              </div>
+
+              {/* Separated Fact vs Legend */}
+              <div className="space-y-2 pt-2 border-t border-[var(--line,#D8CBB0)]/30 text-xs">
+                {adapted.folkloreText && (
+                  <div className="p-3 rounded-[var(--radius-sm,8px)] bg-[var(--folklore,#B8390A)]/10 text-[var(--folklore,#B8390A)] space-y-1">
+                    <span className="font-mono-label text-[10px] font-bold block">
+                      ORAL FOLKLORE &amp; ENIGMA
+                    </span>
+                    <p className="leading-relaxed">{adapted.folkloreText}</p>
+                  </div>
+                )}
+
+                {adapted.historyText && (
+                  <div className="p-3 rounded-[var(--radius-sm,8px)] bg-[var(--jade-deep,#0B7A50)]/10 text-[var(--jade-deep,#0B7A50)] space-y-1">
+                    <span className="font-mono-label text-[10px] font-bold block">
+                      DOCUMENTED HISTORICAL CONTEXT
+                    </span>
+                    <p className="leading-relaxed">{adapted.historyText}</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="pt-2 flex items-center justify-between text-xs font-mono-label">
+                <span className={isSelected ? 'text-[var(--sand,#EADFC8)]' : 'text-[var(--muted,#5E675F)]'}>
+                  Public, accessible places only.
+                </span>
+                <Link
+                  href={`/explorer?dest=${dest.id}`}
+                  className="font-bold text-[var(--flame,#FF5A1F)] hover:underline flex items-center gap-1"
+                >
+                  Locate on Map &rarr;
+                </Link>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

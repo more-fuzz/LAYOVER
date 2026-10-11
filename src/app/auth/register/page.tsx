@@ -1,13 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
-import { Eye, EyeOff, CheckCircle2, ShieldCheck } from 'lucide-react';
+import { LogoMark } from '@/components/brand/LogoMark';
+import { Button } from '@/components/ui/Button';
 
-export default function RegisterPage() {
+function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get('redirectTo') || '/explorer';
+
   const { signUpWithEmail } = useAuth();
 
   const [displayName, setDisplayName] = useState('');
@@ -41,141 +45,163 @@ export default function RegisterPage() {
     if (res.error) {
       setErrorMsg(res.error);
     } else {
-      setSuccessMsg(res.message || 'Registration complete! Check your email or proceed to login.');
+      setSuccessMsg(res.message || 'Registration complete! Check your email or sign in below.');
     }
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-6 bg-[#FFFDF8] p-8 rounded-2xl border-2 border-[#D6CCBC] shadow-sm">
-        <div className="text-center">
-          <div className="w-16 h-16 rounded-full overflow-hidden border border-[#D6CCBC] flex items-center justify-center bg-[#FFFDF8] mx-auto mb-3 shadow-xs">
-            <img
-              src="/logo.jpg"
-              alt="Trails & Tales Official Logo"
-              className="w-full h-full object-contain"
-            />
+    <div className="field-container min-h-[75vh] flex items-center justify-center py-12 px-4 page-rise">
+      <div className="max-w-md w-full space-y-6 bg-[var(--card,#FFFAF0)] p-8 rounded-[var(--radius-lg,22px)] border-[1.5px] border-[var(--ink,#0F1F1A)] shadow-xl">
+        <div className="text-center space-y-2">
+          <div className="flex justify-center">
+            <LogoMark className="w-12 h-12" />
           </div>
-          <h1 className="text-2xl font-bold text-[#292820] font-sans">
+          <h1 className="font-display text-2xl font-extrabold text-[var(--ink,#0F1F1A)]">
             Create Explorer Passport
           </h1>
-          <p className="mt-1 text-xs text-[#6D685C]">
+          <p className="text-xs text-[var(--muted,#5E675F)] leading-relaxed">
             Create your traveler identity to log routes, verify feats, and claim outdoor rewards.
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {errorMsg && (
-            <div className="p-3 rounded-lg bg-[#FFFDF8] border border-[#B85F43] text-[#B85F43] text-xs">
+            <div
+              role="alert"
+              className="p-3 rounded-[var(--radius-sm,8px)] border border-[var(--folklore,#B8390A)]/40 bg-[#FBF3F0] text-xs text-[var(--folklore,#B8390A)] font-medium"
+            >
               {errorMsg}
             </div>
           )}
 
           {successMsg && (
-            <div className="p-3.5 rounded-lg bg-[#EAE1D3] border border-[#777A53] text-[#777A53] text-xs flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 shrink-0" />
-              <span>{successMsg}</span>
+            <div
+              role="status"
+              className="p-3.5 rounded-[var(--radius-sm,8px)] border border-[var(--jade-deep,#0B7A50)] bg-[#E2F7EE] text-[var(--jade-deep,#0B7A50)] text-xs font-semibold"
+            >
+              {successMsg}
             </div>
           )}
 
-          <div>
-            <label className="block text-xs font-mono font-bold uppercase text-[#6D685C] mb-1">
+          <div className="space-y-1">
+            <label htmlFor="reg-name" className="block font-mono-label text-[11px] text-[var(--muted,#5E675F)]">
               Explorer Display Name
             </label>
             <input
+              id="reg-name"
               type="text"
               required
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
               placeholder="e.g. Alex Mercer"
-              className="w-full px-3.5 py-2 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] text-xs focus:outline-hidden focus:border-[#777A53]"
+              className="w-full h-11 px-3.5 rounded-[var(--radius,14px)] bg-[var(--card,#FFFAF0)] border border-[var(--line,#D8CBB0)] text-sm text-[var(--ink,#0F1F1A)] focus:border-[var(--flame,#FF5A1F)] transition-colors"
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-mono font-bold uppercase text-[#6D685C] mb-1">
+          <div className="space-y-1">
+            <label htmlFor="reg-email" className="block font-mono-label text-[11px] text-[var(--muted,#5E675F)]">
               Email Address
             </label>
             <input
+              id="reg-email"
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="alex@traveler.com"
-              className="w-full px-3.5 py-2 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] text-xs focus:outline-hidden focus:border-[#777A53]"
+              className="w-full h-11 px-3.5 rounded-[var(--radius,14px)] bg-[var(--card,#FFFAF0)] border border-[var(--line,#D8CBB0)] text-sm text-[var(--ink,#0F1F1A)] focus:border-[var(--flame,#FF5A1F)] transition-colors"
             />
           </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="block text-xs font-mono font-bold uppercase text-[#6D685C]">
+          <div className="space-y-1">
+            <div className="flex items-center justify-between">
+              <label htmlFor="reg-pass" className="block font-mono-label text-[11px] text-[var(--muted,#5E675F)]">
                 Password
               </label>
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="text-[11px] text-[#777A53] hover:underline flex items-center gap-1 font-mono"
+                className="text-[11px] text-[var(--muted,#5E675F)] hover:text-[var(--ink,#0F1F1A)] font-mono-label"
               >
-                {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
-                <span>{showPassword ? 'Hide' : 'Show'}</span>
+                {showPassword ? 'Hide' : 'Show'}
               </button>
             </div>
             <input
+              id="reg-pass"
               type={showPassword ? 'text' : 'password'}
               required
-              minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Minimum 6 characters"
-              className="w-full px-3.5 py-2 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] text-xs focus:outline-hidden focus:border-[#777A53]"
+              placeholder="••••••••"
+              className="w-full h-11 px-3.5 rounded-[var(--radius,14px)] bg-[var(--card,#FFFAF0)] border border-[var(--line,#D8CBB0)] text-sm text-[var(--ink,#0F1F1A)] focus:border-[var(--flame,#FF5A1F)] transition-colors"
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-mono font-bold uppercase text-[#6D685C] mb-1">
+          <div className="space-y-1">
+            <label htmlFor="reg-confirm" className="block font-mono-label text-[11px] text-[var(--muted,#5E675F)]">
               Confirm Password
             </label>
             <input
+              id="reg-confirm"
               type={showPassword ? 'text' : 'password'}
               required
-              minLength={6}
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Repeat your password"
-              className="w-full px-3.5 py-2 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] text-xs focus:outline-hidden focus:border-[#777A53]"
+              placeholder="••••••••"
+              className="w-full h-11 px-3.5 rounded-[var(--radius,14px)] bg-[var(--card,#FFFAF0)] border border-[var(--line,#D8CBB0)] text-sm text-[var(--ink,#0F1F1A)] focus:border-[var(--flame,#FF5A1F)] transition-colors"
             />
           </div>
 
-          <div className="flex items-start gap-2 pt-1">
+          {/* Leave-No-Trace Safety Commitment */}
+          <div className="flex items-start gap-2.5 pt-2">
             <input
+              id="terms-check"
               type="checkbox"
-              id="terms"
               checked={termsAccepted}
               onChange={(e) => setTermsAccepted(e.target.checked)}
-              className="mt-0.5 rounded border-[#D6CCBC] text-[#777A53] focus:ring-0"
+              className="mt-0.5 w-4 h-4 rounded border-[var(--line,#D8CBB0)] text-[var(--flame,#FF5A1F)] focus:ring-[var(--flame,#FF5A1F)] cursor-pointer"
             />
-            <label htmlFor="terms" className="text-[11px] text-[#6D685C] leading-snug">
-              I pledge to practice Leave-No-Trace outdoor ethics, respect cultural heritage sites,
-              and adhere to mandatory safety protocols.
+            <label htmlFor="terms-check" className="text-xs text-[var(--muted,#5E675F)] leading-relaxed cursor-pointer">
+              I agree to adhere to Leave-No-Trace outdoor principles, respect regional boundaries, and explore public trails responsibly.
             </label>
           </div>
 
-          <button
+          <Button
             type="submit"
+            variant="flame"
+            size="lg"
+            isLoading={loading}
             disabled={loading}
-            className="btn-journal-terracotta w-full py-2.5 text-xs font-bold disabled:opacity-50"
+            className="w-full font-bold"
           >
             {loading ? 'Creating Passport...' : 'Create Account'}
-          </button>
+          </Button>
         </form>
 
-        <div className="text-center text-xs text-[#6D685C]">
+        <div className="text-center text-xs text-[var(--muted,#5E675F)]">
           Already registered?{' '}
-          <Link href="/auth/login" className="font-bold text-[#777A53] hover:underline">
-            Sign In here &rarr;
+          <Link
+            href={`/auth/login?redirectTo=${encodeURIComponent(redirectTo)}`}
+            className="font-bold text-[var(--ink,#0F1F1A)] hover:text-[var(--flame,#FF5A1F)] underline"
+          >
+            Sign in &rarr;
           </Link>
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="field-container py-20 text-center font-mono-label text-xs text-[var(--muted,#5E675F)]">
+          Loading registration gateway...
+        </div>
+      }
+    >
+      <RegisterForm />
+    </Suspense>
   );
 }

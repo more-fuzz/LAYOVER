@@ -2,8 +2,9 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import SafeImage from '@/components/SafeImage';
-import { User, ShieldCheck, Sparkles, CheckCircle2, Award, Settings, Bell, Lock } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
+import { StatTile } from '@/components/ui/StatTile';
 
 export default function ProfilePage() {
   const { profile, role, signOut } = useAuth();
@@ -12,6 +13,12 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url);
   const [saving, setSaving] = useState(false);
   const [savedSuccess, setSavedSuccess] = useState(false);
+
+  // Separate, clearly explained privacy toggles (no single blanket consent)
+  const [publicLeaderboard, setPublicLeaderboard] = useState(true);
+  const [privateMemoir, setPrivateMemoir] = useState(true);
+  const [locationPermitted, setLocationPermitted] = useState(false);
+  const [locationPrompt, setLocationPrompt] = useState<string | null>(null);
 
   const sampleAvatars = [
     'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=200&q=80',
@@ -32,132 +39,235 @@ export default function ProfilePage() {
     }, 400);
   };
 
+  const handleRequestLocation = () => {
+    setLocationPrompt('Requesting current GPS coordinates to calculate expedition trailhead proximity...');
+    if (!navigator.geolocation) {
+      setLocationPrompt('Geolocation is not supported by your browser.');
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        setLocationPermitted(true);
+        setLocationPrompt('Location calibrated successfully for expedition waypoint distance calculations.');
+      },
+      (err) => {
+        setLocationPermitted(false);
+        setLocationPrompt(`Location access was denied (${err.message}). You can still enter trailheads manually.`);
+      }
+    );
+  };
+
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full space-y-8">
-      {/* Profile Overview Card */}
-      <div className="p-6 sm:p-8 rounded-2xl bg-[#FFFDF8] border-2 border-[#D6CCBC] shadow-xs flex flex-col sm:flex-row items-center gap-6">
-        <div className="w-20 h-20 rounded-2xl overflow-hidden border border-[#D6CCBC] shrink-0">
-          <SafeImage
+    <div className="field-container max-w-4xl w-full py-8 md:py-12 space-y-8 page-rise">
+      {/* 1. Profile Overview Header */}
+      <div className="p-6 md:p-8 rounded-[var(--radius-lg,22px)] bg-[var(--card,#FFFAF0)] border border-[var(--line,#D8CBB0)] shadow-sm flex flex-col sm:flex-row items-center gap-6">
+        <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-[var(--line,#D8CBB0)] shrink-0">
+          <img
             src={avatarUrl}
             alt={displayName}
-            aspectRatio="1/1"
-            fallbackTitle={displayName}
+            className="w-full h-full object-cover"
           />
         </div>
 
         <div className="flex-1 text-center sm:text-left space-y-1">
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-            <h1 className="text-2xl font-bold text-[#292820] font-sans">{displayName}</h1>
-            <span className="retro-stamp text-[10px]">
+            <h1 className="font-display text-2xl md:text-3xl font-extrabold text-[var(--ink,#0F1F1A)]">
+              {displayName}
+            </h1>
+            <span className="font-mono-label text-[10px] px-2 py-0.5 rounded bg-[var(--sand,#EADFC8)] border border-[var(--line,#D8CBB0)] text-[var(--muted,#5E675F)] font-bold">
               ROLE: {role.toUpperCase()}
             </span>
           </div>
-          <p className="text-xs text-[#6D685C] font-mono">@{profile.username}</p>
-          <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 pt-2 text-xs text-[#292820] font-mono">
-            <span className="font-bold text-[#B85F43] flex items-center gap-1">
-              <Sparkles className="w-3.5 h-3.5 text-[#C6A45B]" />
-              <span>{profile.points.toLocaleString()} PTS Verified</span>
-            </span>
-            <span className="text-[#6D685C]">• Rank #{profile.rank || 6} Global</span>
-          </div>
+          <p className="font-mono-label text-xs text-[var(--muted,#5E675F)]">
+            @{profile.username}
+          </p>
+        </div>
+
+        {/* Sign Out Button */}
+        <div className="shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => signOut()}
+          >
+            Sign Out
+          </Button>
         </div>
       </div>
 
-      {/* Edit Profile Form */}
-      <div className="p-6 sm:p-8 rounded-2xl bg-[#FFFDF8] border border-[#D6CCBC] shadow-xs space-y-6">
-        <div className="border-b border-[#D6CCBC] pb-4">
-          <h2 className="text-lg font-bold text-[#292820] flex items-center gap-2 font-sans">
-            <Settings className="w-4 h-4 text-[#777A53]" />
-            <span>Profile Settings & Identity</span>
+      {/* 2. Passport Standing Statistics */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatTile
+          label="TOTAL EARNED"
+          value={profile.total_earned_points ?? profile.points}
+          unit="PTS"
+          variant="ink"
+          description="Permanent competitive rank points."
+        />
+        <StatTile
+          label="REDEEMABLE BALANCE"
+          value={profile.points}
+          unit="PTS"
+          variant="citron"
+          description="Available for gear and voucher redemptions."
+        />
+        {typeof profile.rank === 'number' && (
+          <StatTile
+            label="GLOBAL STANDING"
+            value={`#${profile.rank}`}
+            variant="default"
+            description="Leaderboard rank decided by verified completions."
+          />
+        )}
+      </div>
+
+      {/* 3. Profile Identity Settings */}
+      <div className="p-6 md:p-8 rounded-[var(--radius-lg,22px)] bg-[var(--card,#FFFAF0)] border border-[var(--line,#D8CBB0)] shadow-sm space-y-6">
+        <div className="border-b border-[var(--line,#D8CBB0)] pb-4">
+          <h2 className="font-display font-bold text-lg text-[var(--ink,#0F1F1A)]">
+            Explorer Identity
           </h2>
-          <p className="text-xs text-[#6D685C] mt-1 leading-relaxed">
-            Personalize your explorer profile and dispatch name. Account permissions and verified certifications are protected and managed by expedition arbiters.
+          <p className="text-xs text-[var(--muted,#5E675F)] mt-1">
+            Configure how your name and avatar appear on public trailheads and expedition records.
           </p>
         </div>
 
         {savedSuccess && (
-          <div className="p-3.5 rounded-xl bg-[#EAE1D3] border border-[#777A53] text-[#777A53] text-xs flex items-center gap-2">
-            <CheckCircle2 className="w-4 h-4 text-[#777A53]" />
-            <span>Profile changes updated successfully!</span>
+          <div
+            role="status"
+            className="p-3.5 rounded-[var(--radius-sm,8px)] bg-[#E2F7EE] border border-[var(--jade-deep,#0B7A50)] text-[var(--jade-deep,#0B7A50)] text-xs font-semibold"
+          >
+            Profile updated successfully!
           </div>
         )}
 
-        <form onSubmit={handleSave} className="space-y-5">
-          <div>
-            <label className="block text-xs font-mono font-bold text-[#6D685C] uppercase tracking-wider mb-1.5">
-              Explorer Display Name
+        <form onSubmit={handleSave} className="space-y-6">
+          <div className="space-y-1">
+            <label htmlFor="display-name" className="block font-mono-label text-[11px] text-[var(--muted,#5E675F)]">
+              Display Name
             </label>
             <input
+              id="display-name"
               type="text"
               required
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="w-full px-3.5 py-2 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] text-sm focus:outline-hidden focus:border-[#777A53]"
+              className="w-full h-11 px-3.5 rounded-[var(--radius,14px)] bg-[var(--card,#FFFAF0)] border border-[var(--line,#D8CBB0)] text-sm text-[var(--ink,#0F1F1A)] focus:border-[var(--flame,#FF5A1F)] transition-colors"
             />
           </div>
 
-          <div>
-            <label className="block text-xs font-mono font-bold text-[#6D685C] uppercase tracking-wider mb-2">
-              Select Field Avatar
+          <div className="space-y-2">
+            <label className="block font-mono-label text-[11px] text-[var(--muted,#5E675F)]">
+              Choose Avatar
             </label>
-            <div className="flex items-center gap-3">
-              {sampleAvatars.map((url, idx) => (
+            <div className="flex flex-wrap gap-3">
+              {sampleAvatars.map((url, i) => (
                 <button
-                  key={idx}
+                  key={i}
                   type="button"
                   onClick={() => setAvatarUrl(url)}
-                  className={`relative rounded-xl overflow-hidden border-2 transition-all ${
+                  className={`w-12 h-12 rounded-full overflow-hidden border-2 transition-transform ${
                     avatarUrl === url
-                      ? 'border-[#B85F43] scale-105'
-                      : 'border-[#D6CCBC] opacity-70 hover:opacity-100'
+                      ? 'border-[var(--flame,#FF5A1F)] scale-110'
+                      : 'border-[var(--line,#D8CBB0)] hover:scale-105'
                   }`}
+                  aria-label={`Select avatar ${i + 1}`}
                 >
-                  <img src={url} alt={`Avatar ${idx}`} className="w-12 h-12 object-cover" />
+                  <img src={url} alt="" className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-mono font-bold text-[#6D685C] uppercase tracking-wider mb-1.5">
-              Custom Avatar Visual URL
-            </label>
+          <Button
+            type="submit"
+            variant="ink"
+            size="default"
+            isLoading={saving}
+          >
+            {saving ? 'Saving...' : 'Save Identity'}
+          </Button>
+        </form>
+      </div>
+
+      {/* 4. Clearly Explained Privacy Controls (No Blanket Consent) */}
+      <div className="p-6 md:p-8 rounded-[var(--radius-lg,22px)] bg-[var(--card,#FFFAF0)] border border-[var(--line,#D8CBB0)] shadow-sm space-y-6">
+        <div className="border-b border-[var(--line,#D8CBB0)] pb-4">
+          <h2 className="font-display font-bold text-lg text-[var(--ink,#0F1F1A)]">
+            Privacy &amp; Data Governance
+          </h2>
+          <p className="text-xs text-[var(--muted,#5E675F)] mt-1">
+            Independent privacy controls for every feature. We never use bundled or all-or-nothing consent agreements.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          {/* Toggle 1: Leaderboard */}
+          <div className="flex items-start justify-between gap-4 p-4 rounded-[var(--radius,14px)] bg-[var(--sand,#EADFC8)]/30 border border-[var(--line,#D8CBB0)]">
+            <div className="space-y-1">
+              <span className="font-display font-bold text-sm text-[var(--ink,#0F1F1A)] block">
+                Public Leaderboard Standing
+              </span>
+              <p className="text-xs text-[var(--muted,#5E675F)] leading-relaxed">
+                Display your verified points and username in the community ranking table. If disabled, your standing is anonymized.
+              </p>
+            </div>
             <input
-              type="url"
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              className="w-full px-3.5 py-2 rounded-lg bg-[#F5F0E7] border border-[#D6CCBC] text-[#292820] text-xs focus:outline-hidden focus:border-[#777A53] font-mono"
+              type="checkbox"
+              checked={publicLeaderboard}
+              onChange={(e) => setPublicLeaderboard(e.target.checked)}
+              aria-label="Toggle public leaderboard standing"
+              className="mt-1 w-5 h-5 rounded border-[var(--line,#D8CBB0)] text-[var(--flame,#FF5A1F)] focus:ring-[var(--flame,#FF5A1F)] cursor-pointer shrink-0"
             />
           </div>
 
-          <div className="p-3.5 rounded-xl bg-[#F5F0E7] border border-[#D6CCBC] flex items-center justify-between text-xs">
-            <div className="flex items-center gap-2 text-[#6D685C]">
-              <Lock className="w-4 h-4 text-[#777A53]" />
-              <span>Account Privilege Level:</span>
+          {/* Toggle 2: Memoir Photo Privacy */}
+          <div className="flex items-start justify-between gap-4 p-4 rounded-[var(--radius,14px)] bg-[var(--sand,#EADFC8)]/30 border border-[var(--line,#D8CBB0)]">
+            <div className="space-y-1">
+              <span className="font-display font-bold text-sm text-[var(--ink,#0F1F1A)] block">
+                Private Archival Evidence
+              </span>
+              <p className="text-xs text-[var(--muted,#5E675F)] leading-relaxed">
+                Keep photo uploads and evidence files private to you and designated review arbiters. Never published to search engines.
+              </p>
             </div>
-            <span className="font-bold text-[#777A53] uppercase font-mono">
-              {role === 'admin' ? 'Arbitration Lead' : 'Verified Explorer'}
-            </span>
+            <input
+              type="checkbox"
+              checked={privateMemoir}
+              onChange={(e) => setPrivateMemoir(e.target.checked)}
+              aria-label="Toggle private archival evidence"
+              className="mt-1 w-5 h-5 rounded border-[var(--line,#D8CBB0)] text-[var(--flame,#FF5A1F)] focus:ring-[var(--flame,#FF5A1F)] cursor-pointer shrink-0"
+            />
           </div>
 
-          <div className="pt-2 flex items-center justify-between">
-            <button
-              type="submit"
-              disabled={saving}
-              className="btn-journal-primary text-xs py-2.5 px-5 disabled:opacity-50"
-            >
-              {saving ? 'Saving...' : 'Save Profile Changes'}
-            </button>
+          {/* Location Request On-Demand (One-line reason) */}
+          <div className="p-4 rounded-[var(--radius,14px)] bg-[var(--sand,#EADFC8)]/30 border border-[var(--line,#D8CBB0)] space-y-3">
+            <div className="flex items-start justify-between gap-4">
+              <div className="space-y-1">
+                <span className="font-display font-bold text-sm text-[var(--ink,#0F1F1A)] block">
+                  Trailhead Location Triangulation
+                </span>
+                <p className="text-xs text-[var(--muted,#5E675F)] leading-relaxed">
+                  Reason: Calculates real road distance and OSRM driving duration from your current position to adventure trailheads.
+                </p>
+              </div>
+              <Button
+                variant={locationPermitted ? 'citron' : 'outline'}
+                size="sm"
+                onClick={handleRequestLocation}
+                className="shrink-0"
+              >
+                {locationPermitted ? 'Calibrated' : 'Calibrate GPS'}
+              </Button>
+            </div>
 
-            <button
-              type="button"
-              onClick={() => signOut()}
-              className="btn-journal-secondary text-xs py-2.5 px-4 text-[#B85F43]"
-            >
-              Sign Out
-            </button>
+            {locationPrompt && (
+              <div className="font-mono-label text-[11px] text-[var(--ink,#0F1F1A)] bg-[var(--card,#FFFAF0)] p-2 rounded border border-[var(--line,#D8CBB0)]">
+                {locationPrompt}
+              </div>
+            )}
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
