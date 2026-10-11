@@ -1,165 +1,297 @@
-# Adventure Passport - Backend Foundation
+# Trails & Tales — Field Guide, After Dark
 
-Adventure Passport is a travel and adventure discovery platform built for adventurers to discover outdoor sports, explore mysterious and historic locations, submit proof of completion, earn verified points/badges, climb the leaderboard, redeem rewards, and curate personal memoirs.
+[![Next.js](https://img.shields.io/badge/Next.js-16.4.0-black?style=flat&logo=next.js)](https://nextjs.org/)
+[![React](https://img.shields.io/badge/React-19.3.0-blue?style=flat&logo=react)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue?style=flat&logo=typescript)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL%20%2B%20Auth%20%2B%20Storage-emerald?style=flat&logo=supabase)](https://supabase.com/)
+[![Leaflet](https://img.shields.io/badge/Leaflet-Interactive%20Maps-green?style=flat&logo=leaflet)](https://leafletjs.com/)
 
-This repository represents the initial **backend foundation** for the application, establishing strict data schemas, Row Level Security (RLS) policies, client/server Supabase integrations, environment validation, and planned API route conventions.
-
----
-
-## 1. Architecture & Client Strategy
-
-The application uses **Next.js App Router** with **TypeScript** and **Supabase (PostgreSQL + Auth + Storage)**.
-
-### Supabase Client Usage Guide
-
-To maintain security, prevent session leakage, and adhere to Next.js cookie handling constraints:
-
-1. **Browser Client (`src/lib/supabase/client.ts`)**
-   - **Usage**: Exclusively in React Client Components marked with `'use client'`.
-   - **Mechanics**: Built using `@supabase/ssr` `createBrowserClient`. Uses public environment variables (`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`).
-   - **Security**: Never uses or receives administrative secrets.
-
-2. **Server Client (`src/lib/supabase/server.ts`)**
-   - **Usage**: In React Server Components, Server Actions, and Route Handlers (`src/app/api/.../route.ts`).
-   - **Mechanics**: Built using `@supabase/ssr` `createServerClient` and Next.js `cookies()`. Evaluated per request so user sessions are never cached or shared across concurrent requests.
-   - **Cookie safety**: In Server Components, cookie writes are safely intercepted without throwing errors, while middleware refreshes expired auth sessions before rendering.
-
-3. **Session Refresh Middleware (`src/middleware.ts` / `src/lib/supabase/middleware.ts`)**
-   - Intercepts incoming requests to keep the Supabase Auth session active and synchronized across cookie headers.
+**Trails & Tales** is an adventure discovery platform designed as an interactive field guide for modern explorers. It lets travelers discover wilderness expeditions, explore regional folklore and uncharted waypoints, calculate hiking and trail routes, submit authenticated proof of completion, earn verified points, climb the global expedition leaderboard, preserve personal memoirs, and redeem points for partner gear vouchers and coupon codes.
 
 ---
 
-## 2. Prerequisites & Dependencies
+## Table of Contents
 
-- **Node.js**: v20+ (Node v25+ supported)
-- **Package Manager**: `npm`
-- **Supabase CLI**: installed as a local dev dependency (`npx supabase`) or Docker for local Postgres.
-
-### Core Dependencies
-- `next`: `16.4.0` (App Router)
-- `react` & `react-dom`: `19.3.0`
-- `@supabase/supabase-js`: `^2.117.3`
-- `@supabase/ssr`: `^0.12.7`
-- `zod`: `^4.6.5`
-- `tailwindcss`: `^4`
-- `supabase`: `^2.120.0` (dev dependency)
+1. [Key Features](#1-key-features)
+2. [Design System ("Field Guide, After Dark")](#2-design-system-field-guide-after-dark)
+3. [Architecture & Tech Stack](#3-architecture--tech-stack)
+4. [Project Structure](#4-project-structure)
+5. [API Reference](#5-api-reference)
+6. [Security & Row Level Security (RLS)](#6-security--row-level-security-rls)
+7. [Installation & Getting Started](#7-installation--getting-started)
+8. [Database Setup & Migrations](#8-database-setup--migrations)
+9. [Build & Verification](#9-build--verification)
 
 ---
 
-## 3. Local Installation & Setup
+## 1. Key Features
 
-1. **Clone the repository**:
-   ```bash
-   git clone https://github.com/more-fuzz/LAYOVER.git
-   cd LAYOVER
-   ```
+### 🗺️ Field Cartography & OSRM Trail Routing
+- **Interactive Map**: Powered by OpenStreetMap and Leaflet with custom pin markers, categories, and selection rings.
+- **Viewport Stability**: The camera position and zoom remain preserved across search typing, category filtering, and activity selection.
+- **Explicit Viewport Navigation**: Features dedicated **"Fit results"** to view all charted waypoints on demand and **"Locate"** to pan smoothly to a selected waypoint.
+- **Automated Sizing with ResizeObserver**: Dynamically adapts without jitter or layout shifts when sidebars, drawers, or mobile list/map tabs are toggled.
+- **OSRM Trail Routing**: Calculates real trail distance (km) and walking time with interactive polylines from regional trail hubs.
 
-2. **Install dependencies**:
-   ```bash
-   npm install
-   ```
+### 🧭 Adventure Discovery & Waypoint Exploration (`/explorer`)
+- Dual-column interactive layout: scrollable waypoints list alongside persistent cartography.
+- Real-time search by trail name, region, access notes, or lore.
+- Filter by dynamic categories (Trekking, Mountaineering, Camping, Spooky/Folklore) and difficulty ratings (Easy, Moderate, Hard, Severe).
+- Responsive mobile toggle between List View and Cartography Map.
 
-3. **Configure Environment Variables**:
-   Copy `.env.example` to `.env.local`:
-   ```bash
-   cp .env.example .env.local
-   ```
-   Provide your Supabase URL and anon/publishable key:
-   ```env
-   NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
-   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-anon-publishable-key
-   ```
-   > **Important**: Never add `SUPABASE_SERVICE_ROLE_KEY` to client-side code or prefix it with `NEXT_PUBLIC_`.
+### 🕯️ Folklore & Mystery Dossiers (`/brave-enough`)
+- Dedicated **"After Dark"** night exploration mode highlighting haunted trails, cryptid folklore, and historic mysteries.
+- Folklore dossiers with regional legends, safety advisories, spooky ratings, and access notes.
+- High-contrast phosphorescent Citron accents on dark Ink slate cartography.
 
-4. **Run the Development Server**:
-   ```bash
-   npm run dev
-   ```
-   Open [http://localhost:3000](http://localhost:3000) to view the application or [http://localhost:3000/api/health](http://localhost:3000/api/health) for backend status.
+### 📸 Proof Submission & Field Evidence (`/submissions/new`)
+- Multi-step guided submission flow: Activity selection &rarr; Image proof upload &rarr; GPS coordinate verification &rarr; Field notes & consent declaration.
+- Real-time GPS coordinate extraction from images (EXIF) or manual entry with Haversine radius validation.
+- Multi-tier verification status tracking: `pending` &rarr; `approved` (points awarded) or `rejected`.
+
+### 🎟️ Outfitter Rewards Depot & Coupon Codes (`/rewards`)
+- **Reward Catalogue**: Active equipment vouchers, partner gear discounts, and brass enamel pins available for points redemption.
+- **Atomic Point Debiting**: Server-side validation verifying points balance and stock availability before generation.
+- **Immediate In-Place Voucher Receipt**: A high-visibility modal reveals the authentic claim voucher code immediately upon redemption.
+- **Claimed Vouchers Tab (`GET /api/rewards?mine=true`)**: Complete list of redeemed vouchers displaying dates, points spent, partner status, and full coupon codes.
+- **Accessible One-Click Copy**: Instant clipboard copying with visual `"Copied!"` badge feedback and hidden textarea fallback.
+- **Dedicated Voucher Ticket (`/rewards/redemptions/[id]`)**: Official claim ticket view with partner usage instructions, expiry dates, and outbound merchant links.
+
+### 🏆 Expedition Leaderboard & Arena Standings (`/arena` / `/leaderboard`)
+- Top explorer ranks displaying total verified points, completed expeditions count, and customized badge titles.
+- Distinction between **Total Lifetime Earned** points (leaderboard rank) and **Current Redeemable Balance** (rewards spending).
+
+### 📖 Personal Adventure Memoir (`/memoir`)
+- Complete historical traveler passport documenting verified expeditions.
+- Filter entries by year or search keyword, with instant toggle between Chronological Journal and Geographic Map view.
+
+### 🛡️ Admin Verification Queue (`/admin`)
+- Moderation workspace allowing administrators to review submitted evidence images, coordinates, and notes.
+- One-click **Approve** (automatically credits points via transactional ledger) or **Reject** (with optional feedback reason).
+
+### ⚙️ Traveler Profile & Privacy Settings (`/profile`)
+- Manage display name, avatar, bio, and role badge.
+- Granular privacy toggles for Public Profile visibility, Memoir inclusion on public maps, and Leaderboard anonymity.
+- Complete consent management history with immutable audit log records.
 
 ---
 
-## 4. Database Migrations & Seed Data
+## 2. Design System ("Field Guide, After Dark")
 
-Database migrations are version-controlled under `supabase/migrations/`.
+The visual language blends archival field-manual aesthetics with modern dark-mode maximalism:
 
-### Local Supabase Workflow
+| Token | Hex / Value | Semantic Role |
+| :--- | :--- | :--- |
+| **`--paper`** | `#F6EFE2` | Light archival base background |
+| **`--ink`** | `#0F1F1A` | Deep forest-ink background & typography |
+| **`--sand`** | `#EADFC8` | Secondary neutral fill & card backing |
+| **`--line`** | `#D8CBB0` | Tactile border & division rules |
+| **`--citron`** | `#D8F23C` | High-visibility phosphorescent accent (points, after-dark) |
+| **`--flame`** | `#FF5A1F` | Adventure primary action & interactive pins |
+| **`--folklore`** | `#B8390A` | Folklore dossiers, spooky pins, and warnings |
+| **`--jade-deep`** | `#0B7A50` | Verified status badges & success confirmation |
 
-1. **Initialize and start local Supabase instance** (requires Docker):
-   ```bash
-   npx supabase start
-   ```
+- **Typography**: Display headings in Helvetica/Public Sans display weight; labels in uppercase tabular monospace (`font-mono-label`).
+- **Interactive Feedback**: Rotated stamps (`VERIFIED`, `COPIED`), perforation border notches on claim tickets, and card hover translations.
 
-2. **Apply migrations**:
-   ```bash
-   npx supabase db reset
-   # Or manually apply:
-   npx supabase migration up
-   ```
+---
 
-3. **Load Demonstration Seed Data**:
-   ```bash
-   # Automatically loaded on 'supabase db reset', or manually execute:
-   npx supabase db execute --file supabase/seed.sql
-   ```
+## 3. Architecture & Tech Stack
 
-4. **Run RLS & Security Tests**:
-   ```bash
-   npx supabase db execute --file supabase/tests/rls_test.sql
-   ```
+```
+┌────────────────────────────────────────────────────────┐
+│                   Next.js 16 App Router                │
+│  (React 19, TypeScript, Turbopack, Tailwind CSS tokens)│
+└───────────┬────────────────────────────────┬───────────┘
+            │                                │
+            ▼                                ▼
+┌───────────────────────┐        ┌───────────────────────┐
+│     Map & Routing     │        │    Data & Security    │
+│  Leaflet + OpenStreet │        │  Supabase (Postgres)  │
+│  OSRM Routing Machine │        │  Row Level Security   │
+└───────────────────────┘        │  Supabase Auth & SSR  │
+                                 └───────────────────────┘
+```
 
-### Remote Supabase Project Workflow
+- **Framework**: Next.js 16.4.0 (App Router, Turbopack)
+- **UI & State**: React 19.3.0, Vanilla CSS Custom Properties + Tailwind CSS utilities
+- **Maps & GIS**: Leaflet 1.9.4, OpenStreetMap tiles, OSRM Routing Engine
+- **Database & Auth**: Supabase PostgreSQL 15, Supabase Auth via `@supabase/ssr`, Supabase Storage
+- **Validation**: Zod schema validation for submissions and payload sanitization
+- **Type Safety**: End-to-end TypeScript interfaces with clean UI adapters (`src/lib/ui/adapters.ts`)
 
-1. Link your remote Supabase project:
+---
+
+## 4. Project Structure
+
+```
+├── docs/
+│   └── ui-inventory.md                # Comprehensive component & route UI inventory
+├── public/                            # Static assets, branding, and images
+├── src/
+│   ├── app/                           # Next.js App Router routes (33 routes)
+│   │   ├── activities/[id]/           # Individual activity detail view
+│   │   ├── admin/                     # Admin submission review dashboard
+│   │   ├── api/                       # REST API route handlers
+│   │   │   ├── activities/            # GET adventure activities
+│   │   │   ├── admin/submissions/     # GET & POST reviewer approval endpoints
+│   │   │   ├── destinations/          # GET historic/spooky destinations
+│   │   │   ├── health/                # GET system & endpoint health check
+│   │   │   ├── leaderboard/           # GET aggregated points leaderboard
+│   │   │   ├── memoir/                # GET personal approved memoir entries
+│   │   │   ├── rewards/               # GET catalogue & GET ?mine=true vouchers
+│   │   │   │   ├── [id]/redeem/       # POST atomic reward redemption
+│   │   │   │   └── redemptions/[id]/  # GET individual coupon voucher ticket
+│   │   │   └── submissions/           # GET & POST explorer evidence submissions
+│   │   ├── arena/                     # Global adventure rankings & stats
+│   │   ├── auth/                      # Login & Register views
+│   │   ├── brave-enough/              # Folklore & After Dark dossiers
+│   │   ├── dashboard/                 # Traveler personal dashboard
+│   │   ├── explorer/                  # Split Cartography & Waypoint discovery
+│   │   ├── memoir/                    # Traveler expedition journal & map
+│   │   ├── profile/                   # User profile, privacy & consent
+│   │   ├── rewards/                   # Rewards Depot & Claimed Vouchers
+│   │   │   └── redemptions/[id]/      # Authenticated coupon claim ticket
+│   │   └── submissions/new/           # Multi-step proof submission wizard
+│   ├── components/
+│   │   ├── activities/                # Activity detail layouts
+│   │   ├── arena/                     # Leaderboard arena views
+│   │   ├── brand/                     # LogoMark, IntroLoader
+│   │   ├── ui/                        # Reusable accessible component library
+│   │   │   ├── Button, Chip, ConfirmDialog, DifficultyDots
+│   │   │   ├── EmptyState, Icon, ImageTile, ProgressSteps
+│   │   │   ├── SearchField, Skeleton, StampBadge, StatTile
+│   │   │   └── StatusTag, Toast
+│   │   ├── MapComponent.tsx           # Resilient Leaflet map component with OSRM
+│   │   ├── Navbar.tsx                 # Navigation with live points chip
+│   │   └── Footer.tsx                 # Field guide footer
+│   ├── context/
+│   │   └── AuthContext.tsx            # Supabase session & demo user switching
+│   ├── data/
+│   │   └── sampleData.ts              # Verified sample fallback data
+│   ├── lib/
+│   │   ├── supabase/                  # Server, client & middleware Supabase clients
+│   │   ├── ui/
+│   │   │   ├── adapters.ts            # UI data transformers & type contracts
+│   │   │   └── api.ts                 # Unified fetch client with payload preservation
+│   │   └── auth-server.ts             # Server-side auth helpers
+│   ├── services/                      # Business logic layer (activities, rewards, osrm)
+│   └── validation/schemas.ts          # Zod schemas for submissions and review
+└── supabase/
+    ├── migrations/                    # Versioned database migrations
+    ├── seed.sql                       # Demonstration seed data
+    └── tests/                         # SQL RLS policy tests
+```
+
+---
+
+## 5. API Reference
+
+All endpoints return JSON and provide standardized `{ status: 'ok' | 'error', ... }` responses.
+
+| Endpoint | Method | Auth | Description |
+| :--- | :---: | :---: | :--- |
+| `/api/health` | `GET` | Public | System and planned endpoints status check |
+| `/api/activities` | `GET` | Public | List adventure activities (supports `?category=...`) |
+| `/api/destinations` | `GET` | Public | List mystery & folklore destinations |
+| `/api/submissions` | `GET` | User | List user's submissions (`?all=true` for admin) |
+| `/api/submissions` | `POST` | User | Create new adventure proof submission |
+| `/api/admin/submissions` | `GET` | Admin | Reviewer queue (supports `?status=pending`) |
+| `/api/admin/submissions/[id]/review` | `POST` | Admin | Review action (`approve` or `reject` with notes) |
+| `/api/leaderboard` | `GET` | Public | Global user rankings aggregated by verified points |
+| `/api/memoir` | `GET` | User | Personal memoir of approved adventures |
+| `/api/rewards` | `GET` | Public | Catalog of active outfitter rewards |
+| `/api/rewards?mine=true` | `GET` | User | List of user's claimed voucher redemptions |
+| `/api/rewards/[id]/redeem` | `POST` | User | Atomically redeem a reward and generate `claim_code` |
+| `/api/rewards/redemptions/[id]` | `GET` | User | Retrieve specific authenticated voucher ticket |
+
+---
+
+## 6. Security & Row Level Security (RLS)
+
+The Supabase database has Row Level Security (RLS) enabled across all tables:
+
+1. **`profiles`**: Public profile data readable by all. Updates restricted to the authenticated user. Role escalation to `admin` is blocked by database trigger `trg_protect_profile_role`.
+2. **`submissions`**: Explorers can only view and insert their own pending submissions. Status mutations are restricted to administrators.
+3. **`point_ledger`**: Direct client inserts are disallowed. Points can only be allocated through server-side verified actions.
+4. **`rewards` & `redemptions`**: Redemptions require server verification. Users can only view their own redemptions.
+5. **`consent_records`**: Immutable audit logs capturing privacy policy acceptance. Updates and deletes are blocked.
+
+---
+
+## 7. Installation & Getting Started
+
+### Prerequisites
+- **Node.js**: v20 or higher
+- **npm**: v10 or higher
+- **Supabase Account**: (Optional for local testing; demo fallback mode is built-in)
+
+### Step 1: Clone Repository
+```bash
+git clone https://github.com/more-fuzz/LAYOVER.git
+cd LAYOVER
+```
+
+### Step 2: Install Dependencies
+```bash
+npm install
+```
+
+### Step 3: Configure Environment
+Copy `.env.example` to `.env.local`:
+```bash
+cp .env.example .env.local
+```
+Add your Supabase credentials:
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=your-publishable-anon-key
+```
+
+### Step 4: Run Development Server
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## 8. Database Setup & Migrations
+
+If configuring a fresh Supabase database:
+
+1. **Link your project**:
    ```bash
    npx supabase login
-   npx supabase link --project-ref <your-project-ref>
+   npx supabase link --project-ref your-project-id
    ```
 
-2. Push migrations to remote database:
+2. **Push migrations**:
    ```bash
    npx supabase db push
    ```
 
----
-
-## 5. Security & Row Level Security (RLS) Architecture
-
-Row Level Security is enabled on **all 8 application tables**:
-
-| Table | SELECT | INSERT | UPDATE | DELETE |
-| :--- | :--- | :--- | :--- | :--- |
-| **`profiles`** | Anyone (public profile data) | Handled by `auth.users` trigger | Self (role changes blocked by trigger) | Admin only |
-| **`activities`** | Published (or Admin) | Admin only | Admin only | Admin only |
-| **`destinations`** | Published (or Admin) | Admin only | Admin only | Admin only |
-| **`submissions`** | Owner or Admin | Authenticated owner (pending status only) | Admin only (review status) | Owner (pending only) |
-| **`point_ledger`** | Owner or Admin | Disallowed from client (server-only) | Disallowed | Disallowed |
-| **`rewards`** | Active (or Admin) | Admin only | Admin only | Admin only |
-| **`redemptions`** | Owner or Admin | Disallowed direct client insert | Admin only | Disallowed |
-| **`consent_records`**| Owner or Admin | Authenticated owner | Disallowed (immutable) | Disallowed (immutable) |
-
-### Anti-Tampering Database Triggers
-- `trg_protect_profile_role`: Blocks non-admins from changing their role or escalating privileges to `admin`.
-- `trg_protect_submission_review`: Prevents travelers from approving their own submissions, assigning reviewers, or altering review timestamps.
-- `idx_point_ledger_unique_submission_award`: Partial unique index preventing duplicate reward/point allocations for a single submission.
-- `on_auth_user_created`: Server-side trigger automatically creating a traveler profile on registration, ignoring client-submitted role metadata.
+3. **Load seed data**:
+   ```bash
+   npx supabase db execute --file supabase/seed.sql
+   ```
 
 ---
 
-## 6. Current Limitations & Next Planned Phases
+## 9. Build & Verification
 
-### Current Limitations
-- Frontend UI components, interactive maps (Mapbox), and image upload components are intentionally not included in this foundation phase.
-- Submission review actions and reward point deductions require atomic database functions (`RPC`) scheduled for the next phase.
+To verify type safety and build output:
 
-### Planned Next Phases
-1. **API Endpoints**:
-   - `GET /api/activities`: Discovery and category filtering.
-   - `GET /api/destinations`: Historic, mystery, and natural destination catalog.
-   - `POST /api/submissions`: Upload private evidence to Supabase Storage and register submission.
-   - `POST /api/admin/submissions/[id]/review`: Admin verification with transactional point ledger insertion.
-   - `GET /api/leaderboard`: Aggregated points computation.
-   - `GET /api/memoir`: Verified user accomplishments.
-   - `POST /api/rewards/[id]/redeem`: Atomic balance check, point deduction, and stock decrement.
-2. **Supabase Storage Integration**:
-   - Private bucket configuration for evidence media with signed URLs for authorized reviewer access.
+```bash
+# 1. TypeScript compilation check
+npx tsc --noEmit
+
+# 2. Production build (compiles all 33 routes)
+npm run build
+```
+
+---
+
+## 📜 License
+
+Created for the **Trails & Tales** Adventure Platform. Distributed under the MIT License.
