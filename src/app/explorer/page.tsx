@@ -340,7 +340,7 @@ function ExplorerContent() {
               mobileView === 'list' ? 'hidden md:block' : 'block'
             }`}
           >
-            <div className="relative rounded-[28px] overflow-hidden border-[1.5px] border-[var(--ink,#0F1F1A)] shadow-lg">
+            <div className="relative z-0 isolate rounded-[28px] overflow-hidden border-[1.5px] border-[var(--ink,#0F1F1A)] shadow-lg">
               <MapComponent
                 activities={rawActivities}
                 destinations={rawDestinations}
@@ -355,7 +355,7 @@ function ExplorerContent() {
               {(selectedActivity || selectedDestination) && (
                 <div
                   onClick={(e) => e.stopPropagation()}
-                  className="absolute bottom-4 left-4 right-4 z-[400] bg-[var(--card,#FFFAF0)] text-[var(--ink,#0F1F1A)] border-[1.5px] border-[var(--ink,#0F1F1A)] rounded-[var(--radius,14px)] p-4 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200"
+                  className="absolute bottom-4 left-4 right-4 z-20 bg-[var(--card,#FFFAF0)] text-[var(--ink,#0F1F1A)] border-[1.5px] border-[var(--ink,#0F1F1A)] rounded-[var(--radius,14px)] p-4 shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-200"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">

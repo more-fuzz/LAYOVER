@@ -430,13 +430,13 @@ export default function MapComponent({
 
   return (
     <div
-      className={`relative w-full rounded-[var(--radius-lg,22px)] overflow-hidden border-[1.5px] border-[var(--ink,#0F1F1A)] ${
+      className={`relative z-0 isolate w-full rounded-[var(--radius-lg,22px)] overflow-hidden border-[1.5px] border-[var(--ink,#0F1F1A)] ${
         isAfterDark ? 'map-after-dark' : ''
       }`}
       style={{ minHeight: height, height }}
     >
       {/* Map Control Toolbar: After Dark indicator, Fit results, Locate */}
-      <div className="absolute top-4 left-4 z-[400] flex flex-wrap items-center gap-2">
+      <div className="absolute top-4 left-4 z-20 flex flex-wrap items-center gap-2">
         {/* After Dark Indicator Banner */}
         {isAfterDark && (
           <div className="bg-[var(--ink,#0F1F1A)] text-[var(--citron,#D8F23C)] border border-[var(--citron,#D8F23C)] px-3 py-1.5 rounded-[var(--radius-sm,8px)] font-mono-label text-[11px] font-bold flex items-center gap-2 shadow-lg">
@@ -474,7 +474,7 @@ export default function MapComponent({
 
       {/* Route Direction Panel (Accessible overlay if routing active) */}
       {enableRouting && selectedDestination && (
-        <div className="absolute top-4 right-4 z-[400] max-w-xs bg-[var(--card,#FFFAF0)] border border-[var(--line,#D8CBB0)] p-3 rounded-[var(--radius,14px)] shadow-lg text-xs space-y-2">
+        <div className="absolute top-4 right-4 z-20 max-w-xs bg-[var(--card,#FFFAF0)] border border-[var(--line,#D8CBB0)] p-3 rounded-[var(--radius,14px)] shadow-lg text-xs space-y-2">
           <div className="flex items-center justify-between font-mono-label text-[10px] text-[var(--muted,#5E675F)]">
             <span>ROUTE PLANNER</span>
             {routeResult && (
