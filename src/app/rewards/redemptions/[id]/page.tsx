@@ -1,307 +1,290 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { useParams, useRouter } from 'next/navigation';
-import SafeImage from '@/components/SafeImage';
-import { RedemptionItem, SAMPLE_REDEMPTIONS } from '@/data/sampleData';
-import {
-  Copy,
-  Check,
-  ArrowLeft,
-  ExternalLink,
-  ShieldCheck,
-  Sparkles,
-  Ticket,
-  AlertTriangle,
-  Clock,
-  Compass,
-} from 'lucide-react';
+import { useParams } from 'next/navigation';
+import { apiClient } from '@/lib/ui/api';
+import { adaptRedemption, UiRedemption } from '@/lib/ui/adapters';
+import { Button } from '@/components/ui/Button';
+import { Icon } from '@/components/ui/Icon';
+import { ImageTile } from '@/components/ui/ImageTile';
+import { EmptyState, ErrorState } from '@/components/ui/EmptyState';
 
 export default function CouponRedemptionPage() {
   const params = useParams();
-  const router = useRouter();
   const redemptionId = params?.id as string;
 
-  const [redemption, setRedemption] = useState<RedemptionItem | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [redemption, setRedemption] = useState<UiRedemption | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorCode, setErrorCode] = useState<number | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Copy code state: 2.2s feedback with rotated "Copied" stamp
   const [copied, setCopied] = useState(false);
-  const [copyError, setCopyError] = useState(false);
+  const hiddenTextAreaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    async function loadRedemption() {
-      if (!redemptionId) return;
-      try {
-        const res = await fetch(`/api/rewards/redemptions/${redemptionId}`);
-        if (res.ok) {
-          const json = await res.json();
-          if (json.data) {
-            setRedemption(json.data);
-            setLoading(false);
-            return;
-          }
-        }
-      } catch (err) {
-        console.warn('API redemption load failed, fallback to sample cache', err);
-      }
+    if (!redemptionId) return;
 
-      // Fallback lookup from sample redemptions
-      const found = SAMPLE_REDEMPTIONS.find(
-        (r) => r.id === redemptionId || r.claim_code === redemptionId
-      );
-      if (found) {
-        setRedemption(found);
-      }
-      setLoading(false);
-    }
+    let isMounted = true;
+    setIsLoading(true);
+    setErrorCode(null);
+    setErrorMessage(null);
 
-    loadRedemption();
+    apiClient.get<any>(`/api/rewards/redemptions/${redemptionId}`).then((res) => {
+      if (!isMounted) return;
+      setIsLoading(false);
+
+      if (res.ok && res.data) {
+        setRedemption(adaptRedemption(res.data));
+      } else {
+        setErrorCode(res.status);
+        setErrorMessage(res.message);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
   }, [redemptionId]);
 
-  const handleCopyCode = async () => {
-    if (!redemption?.claim_code) return;
+  // Copy handler with fallback textarea selection, never logging code
+  const handleCopyCode = () => {
+    if (!redemption?.claimCode) return;
+
     try {
-      if (navigator.clipboard && window.isSecureContext) {
-        await navigator.clipboard.writeText(redemption.claim_code);
-        setCopied(true);
-        setCopyError(false);
-        setTimeout(() => setCopied(false), 3000);
+      if (navigator?.clipboard?.writeText) {
+        navigator.clipboard.writeText(redemption.claimCode);
       } else {
         throw new Error('Clipboard API unavailable');
       }
     } catch {
-      // Graceful fallback for environments blocking navigator.clipboard
-      setCopyError(true);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 4000);
+      // Hidden textarea fallback
+      if (hiddenTextAreaRef.current) {
+        hiddenTextAreaRef.current.value = redemption.claimCode;
+        hiddenTextAreaRef.current.select();
+        document.execCommand('copy');
+      }
+    }
+
+    setCopied(true);
+    setTimeout(() => {
+      setCopied(false);
+    }, 2200);
+  };
+
+  // Status mapping
+  const formatStatus = (rawStatus: string) => {
+    switch (rawStatus.toLowerCase()) {
+      case 'active':
+      case 'issued':
+        return 'Voucher Issued';
+      case 'claimed':
+      case 'redeemed':
+        return 'Partner Confirmed';
+      case 'expired':
+        return 'Expired';
+      default:
+        return rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center">
-        <div className="inline-block p-4 border border-[#D6CCBC] bg-[#FFFDF8] rounded-xl shadow-sm text-sm font-medium text-[#6D685C]">
-          Retrieving Expedition Voucher Archives...
-        </div>
+      <div className="field-container w-full py-20 text-center font-mono-label text-xs text-[var(--muted,#5E675F)]">
+        Opening authenticated voucher ticket...
       </div>
     );
   }
 
-  if (!redemption) {
+  // 403 or 404 or missing coupon
+  if (errorCode === 403 || errorCode === 404 || !redemption) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-4">
-        <div className="inline-block p-6 border border-[#D6CCBC] bg-[#FFFDF8] rounded-2xl max-w-md mx-auto">
-          <Ticket className="w-8 h-8 text-[#B85F43] mx-auto mb-3" />
-          <h2 className="text-xl font-bold text-[#292820] font-sans">Voucher Record Not Found</h2>
-          <p className="text-xs text-[#6D685C] mt-2 leading-relaxed">
-            The requested redemption ID could not be located in your authenticated trail archives.
-          </p>
-          <div className="mt-6 flex justify-center gap-3">
-            <Link
-              href="/rewards"
-              className="btn-journal-primary text-xs flex items-center gap-1.5"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Return to Rewards</span>
-            </Link>
-          </div>
-        </div>
+      <div className="field-container w-full py-16">
+        <EmptyState
+          title="We couldn't find that coupon"
+          description="The requested redemption ticket could not be found or you do not have permission to view it."
+          actionLabel="Return to Rewards"
+          actionHref="/rewards"
+          icon="ticket"
+        />
       </div>
     );
   }
-
-  const instructions =
-    redemption.usage_instructions || [
-      'Copy your unique expedition coupon code shown in the voucher certificate below.',
-      `Visit the certified ${redemption.merchant_name || 'Trails & Tales Outfitter Depot'} portal.`,
-      'Add the eligible expedition gear or pass to your checkout kit.',
-      'Paste this promotional coupon into the Outfitter Voucher input field at checkout.',
-      'Confirm the full discount is applied to your order before finalizing delivery.',
-    ];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 md:py-12 space-y-8">
-      {/* Breadcrumb / Top Bar */}
-      <div className="flex items-center justify-between border-b border-[#D6CCBC] pb-4">
+    <div className="field-container w-full py-8 md:py-16 space-y-8 page-rise">
+      {/* Hidden textarea for safe copy fallback */}
+      <textarea
+        ref={hiddenTextAreaRef}
+        className="sr-only"
+        aria-hidden="true"
+        tabIndex={-1}
+        readOnly
+      />
+
+      {/* Back button */}
+      <div>
         <Link
           href="/rewards"
-          className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#6D685C] hover:text-[#292820] transition-colors"
+          className="inline-flex items-center gap-2 text-xs font-semibold text-[var(--muted,#5E675F)] hover:text-[var(--ink,#0F1F1A)] transition-colors"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
+          <Icon name="arrow-left" size={14} aria-hidden="true" />
           <span>Back to Rewards Catalogue</span>
         </Link>
-
-        <div className="flex items-center gap-2">
-          <span className="retro-stamp text-[10px]">VERIFIED DISPATCH</span>
-          <span className="text-xs font-mono text-[#777A53] font-bold">
-            REF #{redemption.id.substring(0, 10).toUpperCase()}
-          </span>
-        </div>
       </div>
 
-      {/* Hero Certificate Card */}
-      <div className="bg-[#FFFDF8] border-2 border-[#D6CCBC] rounded-2xl p-6 sm:p-8 shadow-sm relative overflow-hidden">
-        {/* Subtle decorative stamp */}
-        <div className="absolute top-4 right-4 hidden sm:block border-2 border-dashed border-[#B85F43]/40 rounded-lg p-2 transform rotate-2 pointer-events-none select-none text-center">
-          <div className="text-[9px] font-mono tracking-widest text-[#B85F43] font-bold uppercase">
-            CERTIFIED VOUCHER
-          </div>
-          <div className="text-[8px] font-mono text-[#6D685C]">EXPEDITION ARCHIVE</div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
-          {/* Reward Visual */}
-          <div className="md:col-span-5 space-y-3">
-            <div className="rounded-xl overflow-hidden border border-[#D6CCBC] shadow-sm">
-              <SafeImage
-                src={redemption.reward_image || 'https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=800&q=80'}
-                alt={redemption.reward_name}
+      {/* Ticket Grid: Left Column Reward Tile, Right Column Ink Ticket */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start max-w-5xl mx-auto">
+        {/* Left Column (5 cols): Illustrative reward tile, name, points spent */}
+        <div className="lg:col-span-5 space-y-6">
+          <div className="card-field p-6 space-y-4">
+            <div className="rounded-[var(--radius-sm,8px)] overflow-hidden border border-[var(--line,#D8CBB0)]">
+              <ImageTile
+                src={redemption.imageUrl}
+                alt={redemption.rewardName}
                 aspectRatio="4/3"
-                fallbackTitle={redemption.reward_name}
+                className="w-full h-full object-cover"
               />
             </div>
-            <div className="p-3 bg-[#EAE1D3]/50 rounded-lg border border-[#D6CCBC] text-center">
-              <div className="text-[10px] font-mono uppercase tracking-wider text-[#6D685C]">
-                Official Provider / Depot
-              </div>
-              <div className="text-xs font-bold text-[#292820] mt-0.5">
-                {redemption.merchant_name || 'Trails & Tales Outfitter Depot'}
-              </div>
-            </div>
-          </div>
 
-          {/* Reward Details & Code Box */}
-          <div className="md:col-span-7 space-y-5">
-            <div>
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[#EAE1D3] text-[#777A53] text-[11px] font-bold tracking-wider uppercase mb-2 font-mono">
-                <Sparkles className="w-3 h-3 text-[#B85F43]" />
-                <span>Points Redeemed: {redemption.points_spent} PTS</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-[#292820] leading-tight font-sans">
-                {redemption.reward_name}
-              </h1>
-              {redemption.reward_description && (
-                <p className="text-xs sm:text-sm text-[#6D685C] mt-2 leading-relaxed">
-                  {redemption.reward_description}
+            <div className="space-y-1">
+              <span className="font-mono-label text-[10px] text-[var(--muted,#5E675F)]">
+                REWARD SPECIFICATION
+              </span>
+              <h2 className="font-display font-bold text-xl text-[var(--ink,#0F1F1A)]">
+                {redemption.rewardName}
+              </h2>
+              {redemption.rewardDescription && (
+                <p className="text-xs text-[var(--muted,#5E675F)] pt-1 leading-relaxed">
+                  {redemption.rewardDescription}
                 </p>
               )}
             </div>
 
-            {/* Monospace Coupon Code & Functional Copy Action */}
-            <div className="p-4 bg-[#F5F0E7] border-2 border-[#D6CCBC] rounded-xl space-y-2">
-              <div className="flex items-center justify-between text-xs text-[#6D685C]">
-                <span className="font-bold uppercase tracking-wider text-[11px]">
-                  Claim Code / Authorization Key:
-                </span>
-                <span className="text-[11px] font-mono text-[#777A53] font-bold">
-                  Status: {redemption.status.toUpperCase()}
-                </span>
+            <div className="pt-3 border-t border-[var(--line,#D8CBB0)] flex items-center justify-between text-xs">
+              <span className="font-mono-label text-[11px] text-[var(--muted,#5E675F)]">Points debited:</span>
+              <span className="font-display font-bold text-base text-[var(--ink,#0F1F1A)] tabular-nums">
+                {redemption.pointsSpent.toLocaleString()} PTS
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-[var(--radius,14px)] bg-[var(--sand,#EADFC8)]/50 border border-[var(--line,#D8CBB0)] text-xs text-[var(--muted,#5E675F)] leading-relaxed">
+            Your coupon status updates here once the partner confirms.
+          </div>
+        </div>
+
+        {/* Right Column (7 cols): Ink Ticket */}
+        <div className="lg:col-span-7">
+          <div className="panel-ink p-6 md:p-8 border border-[var(--ink-line,#2D4C42)] relative overflow-hidden shadow-2xl space-y-6">
+            {/* Top Mono Label */}
+            <div className="flex items-center justify-between border-b border-[var(--ink-line,#2D4C42)] pb-4">
+              <span className="font-mono-label text-[11px] text-[var(--citron,#D8F23C)]">
+                EXPEDITION CLAIM TICKET
+              </span>
+              <span className="font-mono-label text-[10px] text-[var(--sand,#EADFC8)]">
+                OFFICIAL VOUCHER
+              </span>
+            </div>
+
+            {/* Voucher Code Block */}
+            <div className="p-6 rounded-[var(--radius,14px)] bg-[var(--ink-2,#18302A)] border border-[var(--ink-line,#2D4C42)] text-center relative space-y-4">
+              <span className="font-mono-label text-[10px] text-[var(--sand,#EADFC8)] block">
+                YOUR UNIQUE CLAIM CODE
+              </span>
+
+              {/* Huge display code */}
+              <div className="font-display font-extrabold text-2xl sm:text-4xl text-[var(--paper,#F6EFE2)] tracking-widest tabular-nums select-all py-1">
+                {redemption.claimCode}
               </div>
 
-              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-                <div className="flex-1 bg-[#FFFDF8] border border-[#BDB19C] rounded-lg px-4 py-2.5 font-mono text-base font-extrabold text-[#B85F43] tracking-wider select-all text-center sm:text-left">
-                  {redemption.claim_code}
-                </div>
-
+              {/* Copy Code Button with Rotated Copied Stamp */}
+              <div className="relative inline-block">
                 <button
                   type="button"
                   onClick={handleCopyCode}
-                  className="btn-journal-primary text-xs flex items-center justify-center gap-1.5 py-2.5 px-4 shrink-0"
+                  aria-live="polite"
+                  className={`btn-field ${
+                    copied
+                      ? 'bg-[var(--jade-deep,#0B7A50)] text-white border-[var(--jade-deep,#0B7A50)]'
+                      : 'btn-citron'
+                  } text-xs font-bold py-2 px-5 transition-all`}
                 >
-                  {copied ? (
-                    <>
-                      <Check className="w-3.5 h-3.5 text-white" />
-                      <span>{copyError ? 'Select & Copy Code' : 'Code Copied!'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3.5 h-3.5" />
-                      <span>Copy Code</span>
-                    </>
-                  )}
+                  <Icon name={copied ? 'check' : 'copy'} size={14} aria-hidden="true" />
+                  <span>{copied ? 'Code copied' : 'Copy code'}</span>
                 </button>
-              </div>
 
-              <p className="text-[10px] text-[#8E8675] italic">
-                * Click &apos;Copy Code&apos; to store to clipboard, or highlight the code box directly.
-              </p>
+                {/* Animated rotated "Copied" stamp */}
+                {copied && (
+                  <span
+                    aria-hidden="true"
+                    className="absolute -top-3 -right-6 font-mono-label text-[10px] font-extrabold px-2 py-0.5 rounded bg-[var(--citron,#D8F23C)] text-[var(--ink,#0F1F1A)] border border-[var(--ink,#0F1F1A)] transform -rotate-8 animate-in zoom-in-150 duration-200 shadow-md"
+                  >
+                    COPIED
+                  </span>
+                )}
+              </div>
             </div>
 
-            {/* Metadata Badges */}
-            <div className="grid grid-cols-2 gap-3 pt-2 text-xs">
-              <div className="p-2.5 rounded-lg border border-[#D6CCBC] bg-[#FFFDF8]">
-                <div className="text-[10px] text-[#6D685C] uppercase font-mono">Issued On</div>
-                <div className="font-bold text-[#292820] mt-0.5">
-                  {new Date(redemption.created_at).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
+            {/* Ticket Perforation Line with notches */}
+            <div className="relative my-4 flex items-center justify-between">
+              <span className="absolute -left-9 w-6 h-6 rounded-full bg-[var(--paper,#F6EFE2)]" aria-hidden="true" />
+              <div className="w-full border-t border-dashed border-[var(--ink-line,#2D4C42)]" />
+              <span className="absolute -right-9 w-6 h-6 rounded-full bg-[var(--paper,#F6EFE2)]" aria-hidden="true" />
+            </div>
+
+            {/* Status and Expires */}
+            <div className="grid grid-cols-2 gap-4 text-xs font-mono-label">
+              <div>
+                <span className="text-[var(--sand,#EADFC8)] block text-[10px]">STATUS</span>
+                <span className="font-bold text-[var(--citron,#D8F23C)]">
+                  {formatStatus(redemption.status)}
+                </span>
+              </div>
+              {redemption.expiresAt && (
+                <div>
+                  <span className="text-[var(--sand,#EADFC8)] block text-[10px]">EXPIRES</span>
+                  <span className="font-bold text-[var(--paper,#F6EFE2)] tabular-nums">
+                    {new Date(redemption.expiresAt).toLocaleDateString()}
+                  </span>
                 </div>
-              </div>
-              <div className="p-2.5 rounded-lg border border-[#D6CCBC] bg-[#FFFDF8]">
-                <div className="text-[10px] text-[#6D685C] uppercase font-mono">Fulfillment</div>
-                <div className="font-bold text-[#777A53] mt-0.5 flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Verified Single-Use</span>
-                </div>
-              </div>
+              )}
             </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Step-by-Step Redemption Instructions */}
-      <div className="bg-[#FFFDF8] border border-[#D6CCBC] rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
-        <div className="border-b border-[#D6CCBC] pb-3 flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-[#292820] font-sans">
-              How to Claim & Redeem Your Item
-            </h2>
-            <p className="text-xs text-[#6D685C] mt-0.5">
-              Follow these official verification instructions to receive your gear or pass.
-            </p>
-          </div>
-          <Compass className="w-5 h-5 text-[#777A53] hidden sm:block" />
-        </div>
+            {/* Numbered usage steps */}
+            {redemption.usageSteps.length > 0 && (
+              <div className="space-y-3 pt-2">
+                <span className="font-mono-label text-[11px] text-[var(--sand,#EADFC8)] block">
+                  USAGE INSTRUCTIONS
+                </span>
+                <ol className="space-y-2 text-xs text-[var(--sand,#EADFC8)]">
+                  {redemption.usageSteps.map((step: string, idx: number) => (
+                    <li key={idx} className="flex items-start gap-2.5">
+                      <span className="font-mono-label font-bold text-[var(--citron,#D8F23C)] shrink-0">
+                        {idx + 1}.
+                      </span>
+                      <span className="leading-relaxed">{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            )}
 
-        <ol className="space-y-4">
-          {instructions.map((step, idx) => (
-            <li key={idx} className="flex items-start gap-3.5 text-xs sm:text-sm text-[#292820]">
-              <span className="flex items-center justify-center w-6 h-6 rounded-md bg-[#EAE1D3] text-[#777A53] font-mono font-bold text-xs shrink-0 border border-[#D6CCBC]">
-                {idx + 1}
-              </span>
-              <div className="pt-0.5 leading-relaxed">{step}</div>
-            </li>
-          ))}
-        </ol>
-
-        {/* Action Row */}
-        <div className="pt-4 border-t border-[#D6CCBC] flex flex-col sm:flex-row items-center justify-between gap-4">
-          {redemption.merchant_url ? (
-            <a
-              href={redemption.merchant_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-journal-terracotta text-xs w-full sm:w-auto flex items-center justify-center gap-2 py-2.5 px-5"
-            >
-              <span>Continue to {redemption.merchant_name || 'Merchant Outfitter'}</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </a>
-          ) : (
-            <div className="text-xs text-[#6D685C] flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-[#777A53]" />
-              <span>Present this voucher in-person or at check-in station.</span>
-            </div>
-          )}
-
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
-            <Link
-              href="/rewards?tab=my-claims"
-              className="btn-journal-secondary text-xs text-center w-full sm:w-auto"
-            >
-              View Redemption History
-            </Link>
+            {/* Partner link: only if merchantUrl exists */}
+            {redemption.merchantUrl && (
+              <div className="pt-4 border-t border-[var(--ink-line,#2D4C42)]">
+                <a
+                  href={redemption.merchantUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-field btn-flame w-full text-xs font-bold py-3 flex items-center justify-center gap-2"
+                >
+                  <span>Go to partner site</span>
+                  <Icon name="arrow-up-right" size={14} aria-hidden="true" />
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>

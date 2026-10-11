@@ -166,6 +166,9 @@ export function adaptReward(item: any): UiReward {
   };
 }
 
+export type UILeaderboardUser = UiLeaderboardUser;
+export type UIReward = UiReward;
+
 export interface UiRedemption {
   id: string;
   userId: string;
@@ -173,30 +176,47 @@ export interface UiRedemption {
   rewardName: string;
   rewardDescription?: string;
   rewardImage?: string;
+  imageUrl?: string;
   pointsSpent: number;
   status: 'pending' | 'fulfilled' | 'cancelled';
   claimCode: string;
   createdAt: string;
+  expiresAt?: string;
   merchantName?: string;
   merchantUrl?: string;
   usageInstructions?: string[];
+  usageSteps: string[];
 }
 
+export type UIRedemption = UiRedemption;
+
 export function adaptRedemption(item: any): UiRedemption {
+  const steps = Array.isArray(item.usage_instructions)
+    ? item.usage_instructions
+    : Array.isArray(item.usage_steps)
+    ? item.usage_steps
+    : [];
+
+  const img = item.reward_image || item.image_url ? String(item.reward_image || item.image_url) : undefined;
+  const expiry = item.expires_at ? String(item.expires_at) : undefined;
+
   return {
     id: String(item.id),
     userId: String(item.user_id || ''),
     rewardId: String(item.reward_id || ''),
     rewardName: String(item.reward_name || 'Expedition Voucher'),
     rewardDescription: item.reward_description ? String(item.reward_description) : undefined,
-    rewardImage: item.reward_image ? String(item.reward_image) : undefined,
+    rewardImage: img,
+    imageUrl: img,
     pointsSpent: Number(item.points_spent || 0),
     status: (item.status || 'pending') as any,
     claimCode: String(item.claim_code || ''),
     createdAt: String(item.created_at || new Date().toISOString()),
+    expiresAt: expiry,
     merchantName: item.merchant_name ? String(item.merchant_name) : undefined,
     merchantUrl: item.merchant_url ? String(item.merchant_url) : undefined,
-    usageInstructions: Array.isArray(item.usage_instructions) ? item.usage_instructions : undefined,
+    usageInstructions: steps.length > 0 ? steps : undefined,
+    usageSteps: steps,
   };
 }
 
